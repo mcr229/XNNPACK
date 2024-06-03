@@ -26,6 +26,7 @@ CMAKE_ARGS+=("-DXNNPACK_LIBRARY_TYPE=static")
 
 CMAKE_ARGS+=("-DXNNPACK_BUILD_BENCHMARKS=ON")
 CMAKE_ARGS+=("-DXNNPACK_BUILD_TESTS=ON")
+CMAKE_ARGS+=("-DXNNPACK_ENABLE_AVXVNNI=OFF")
 
 # Use-specified CMake arguments go last to allow overridding defaults
 CMAKE_ARGS+=($@)

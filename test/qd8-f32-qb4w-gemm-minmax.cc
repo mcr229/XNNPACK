@@ -370,6 +370,7 @@ std::vector<GemmTestParams> CreateTests1(
       .loop_k(k_block, k_block * 12, k_block)
       .loop_bl(2 * kr * sr, k_block * 12, 2 * kr * sr));
 
+
   return gemm_tests;
 }
 
@@ -488,6 +489,22 @@ INSTANTIATE_TEST_SUITE_P(
         [](GemmMicrokernelTester& tester) {
           tester.Test(xnn_qd8_f32_qb4w_gemm_minmax_ukernel_4x4__scalar,
                       xnn_init_f32_qb4w_minmax_scalar_params,
+                      xnn_pack_qs8_qb4w_gemm_goi_w);
+        })),
+    [](const testing::TestParamInfo<GemmTest::ParamType>& info) {
+      return info.param.test_name;
+    });
+
+INSTANTIATE_TEST_SUITE_P(
+    QD8_F32_QB4W_GEMM_MINMAX_1X4C8__SSE2_LD128, GemmTest,
+    testing::ValuesIn(CreateTests1(
+        /*k_block=*/16,
+        /*adj_k_block=*/16,
+        /*mr=*/1, /*nr=*/4, /*kr=*/8, /*sr=*/1,
+        /*is_igemm=*/false,
+        [](GemmMicrokernelTester& tester) {
+          tester.Test(xnn_qd8_f32_qb4w_gemm_minmax_ukernel_1x4c8__sse2_ld128,
+                      xnn_init_f32_qb4w_minmax_sse_params,
                       xnn_pack_qs8_qb4w_gemm_goi_w);
         })),
     [](const testing::TestParamInfo<GemmTest::ParamType>& info) {

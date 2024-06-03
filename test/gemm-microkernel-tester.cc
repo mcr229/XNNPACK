@@ -76,13 +76,16 @@ TEST_P(GemmTest, Test) {
             }
             for (size_t bl = params.loop_bl_.from; bl <= tester.k() / 2;
                bl += params.loop_bl_.step) {
-              
+
                if (params.loop_bl_.is_set) {
                 // Require block size to divide (padded) column size.
-                if (round_up_po2(k, params.loop_bl_.step) % bl != 0) {
+                if (round_up_po2(tester.k(), params.loop_bl_.step) % bl != 0) {
                   continue;
                 }
                 tester.bl(bl);
+               }
+               if (tester.k() % tester.bl() != 0){
+                continue;
                }
 
                // Call the test function.
@@ -1690,7 +1693,7 @@ void GemmMicrokernelTester::Test(
         EXPECT_NEAR(c[i * cm_stride() + (j / nr()) * cn_stride() + j % nr()], c_ref[i * n() + j], tolerance)
             << "at " << i << ", " << j << ": reference = " << c_ref[i * n() + j]
             << ", optimized = " << c[i * cm_stride() + (j / nr()) * cn_stride() + j % nr()] << ", Mr x Nr x Kr = " << mr() << " x "
-            << nr() << " x " << kr() << ", M x N x K = " << m() << " x " << n() << " x " << k2;
+            << nr() << " x " << kr() << ", M x N x K = " << m() << " x " << n() << " x " << k2 << ", Bl = " << bl();
       }
     }
   }
