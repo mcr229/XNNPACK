@@ -186,6 +186,20 @@
 
 
 #if XNN_ARCH_X86 || XNN_ARCH_X86_64
+  static void qd8_f32_qb4w_gemm_minmax_ukernel_1x4c16__sse41_ld128(benchmark::State& state, const char* net) {
+    GEMMBenchmark(state,
+      xnn_qd8_f32_qb4w_gemm_minmax_ukernel_1x4c16__sse41_ld128,
+      xnn_init_f32_qb4w_minmax_sse_params,
+      xnn_pack_qs8_qb4w_gemm_goi_w,
+      /*mr=*/1, /*nr=*/4, /*kr=*/16, /*sr=*/1,
+      benchmark::utils::CheckSSE41);
+  }
+
+  BENCHMARK_GEMM_BL(qd8_f32_qb4w_gemm_minmax_ukernel_1x4c16__sse41_ld128)
+#endif  // XNN_ARCH_X86 || XNN_ARCH_X86_64
+
+
+#if XNN_ARCH_X86 || XNN_ARCH_X86_64
   static void qd8_f32_qb4w_gemm_minmax_ukernel_1x4c8__sse2_ld128(benchmark::State& state, const char* net) {
     GEMMBenchmark(state,
       xnn_qd8_f32_qb4w_gemm_minmax_ukernel_1x4c8__sse2_ld128,
