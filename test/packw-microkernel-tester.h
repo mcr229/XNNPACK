@@ -503,6 +503,18 @@ class PackWMicrokernelTester {
     }
   }
 
+  static inline void pack_bf16_scales_fn(const xnn_bfloat16* bf16_scales, xnn_bfloat16* pack_bf16_scales, size_t nc, size_t nr, size_t num_blocks) {
+    for (size_t nr_block_start = 0; nr_block_start < nc; nr_block_start += nr) {
+      for(size_t block_start = 0; block_start < num_blocks; block_start++){
+        for(size_t nr_block_offset = 0; nr_block_offset < nr; nr_block_offset++){
+          size_t nr_block_index = (nr_block_start + nr_block_offset)*num_blocks + block_start;
+          size_t packed_index = (nr_block_start * num_blocks) + (block_start) * nr + nr_block_offset;
+          pack_bf16_scales[packed_index] = bf16_scales[nr_block_index];
+        }
+      }
+    }
+  }
+
   void Test(xnn_qb4_packw_gemm_goi_ukernel_fn packw) const {
     xnnpack::Buffer<uint8_t> weights(XNN_EXTRA_BYTES / sizeof(int8_t) + n() * k());
     xnnpack::Buffer<int32_t> bias(n());
@@ -511,6 +523,9 @@ class PackWMicrokernelTester {
     xnnpack::Buffer<int8_t, XNN_ALLOCATION_ALIGNMENT> packed_w_ref(
         packed_n() * packed_k() + packed_n() * sizeof(uint32_t));
     xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(
+      n() * (k() / bl())
+    );
+    xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> pack_bf16_scales(
       n() * (k() / bl())
     );
 
@@ -565,10 +580,11 @@ class PackWMicrokernelTester {
         n(), nr(), nr(), stride, stride, 0, (float*) bias_data, bias_start
       );
     }
+    pack_bf16_scales_fn(scale_data, pack_bf16_scales.data(), n(), nr(), k_num_blocks);
 
     // Call optimized micro-kernel.
     packw(/*g=*/1, n(), k(), nr(), kr(), sr(), bl(),
-      weights.data(), bias_data, /*scale=*/scale_data, packed_w.data(), sizeof(uint16_t) * nr(), /*extra_bytes=*/sizeof(float) * nr(), &packing_params);
+      weights.data(), bias_data, /*scale=*/pack_bf16_scales.data(), packed_w.data(), sizeof(uint16_t) * nr(), /*extra_bytes=*/sizeof(float) * nr(), &packing_params);
     
     const uint8_t* packed_data = (uint8_t*)packed_w.data();
     const uint8_t* packed_ref_data = (uint8_t*)packed_w_ref.data();

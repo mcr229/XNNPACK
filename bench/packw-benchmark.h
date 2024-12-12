@@ -939,3 +939,44 @@ static void x32_packw_x32_gio__reference(benchmark::State& state, const char* ne
 BENCHMARK_BGEMM(x32_packw_x8_gio__reference)
 BENCHMARK_BGEMM(x32_packw_x16_gio__reference)
 BENCHMARK_BGEMM(x32_packw_x32_gio__reference)
+
+static void qb4_packw_goi__reference(
+  size_t batch,
+  size_t dim_n,
+  size_t dim_k,
+  size_t nr,
+  size_t kr,
+  size_t sr,
+  size_t bl,
+  const uint32_t* weights,
+  const uint32_t* bias,
+  const void* scale,
+  uint32_t* packed_weights,
+  size_t extra_bytes_bl,
+  size_t extra_bytes_n,
+  const void* params)
+{
+  xnn_pack_qs8_qb4w_gemm_goi_w(batch, dim_n, dim_k, nr, kr, sr, bl,
+     reinterpret_cast<const uint8_t*>(weights),
+     reinterpret_cast<const float*>(bias),
+     reinterpret_cast<const xnn_bfloat16*>(scale),
+     packed_weights,
+     extra_bytes_bl,
+     extra_bytes_n, 
+     reinterpret_cast<const struct xnn_qs8_qc4w_packing_params*>(params));
+}
+
+static void qb4_packw_x16c4_goi__reference(benchmark::State& state, const char* net) {
+  qb4_packw(state,
+    (xnn_qb4_packw_gemm_goi_ukernel_fn) qb4_packw_goi__reference,
+    /*nr=*/16, /*kr=*/4, /*sr=*/1, /*bl=*/32, true);
+}
+
+static void qb4_packw_x16c8_goi__reference(benchmark::State& state, const char* net) {
+  qb4_packw(state,
+    (xnn_qb4_packw_gemm_goi_ukernel_fn) qb4_packw_goi__reference,
+    /*nr=*/16, /*kr=*/8, /*sr=*/1, /*bl=*/32, true);
+}
+
+BENCHMARK_BGEMM(qb4_packw_x16c4_goi__reference)
+BENCHMARK_BGEMM(qb4_packw_x16c8_goi__reference)
