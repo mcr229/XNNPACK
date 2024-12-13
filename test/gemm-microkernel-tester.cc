@@ -1796,7 +1796,7 @@ void GemmMicrokernelTester::Test(
   gemm_config.log2_sr = static_cast<uint8_t>(31 - math_clz_nonzero_u32(sr()));
 
   const size_t packed_w_stride =
-      packed_stride(&gemm_config, k2, /*k_stride=*/k2, /*extra_bytes=*/0);
+      packed_stride(&gemm_config, k2, /*unused_bl*/0, /*k_stride=*/k2, /*extra_bytes=*/0);
   const size_t packed_w_size = packed_w_stride * round_up(n(), nr());
   xnnpack::Buffer<uint8_t, XNN_ALLOCATION_ALIGNMENT> packed_w(packed_w_size);
 
@@ -1822,7 +1822,7 @@ void GemmMicrokernelTester::Test(
     params.input_zero_point = 1;
     params.kernel_zero_point = b_zero_point();
     pack(/*flags=*/0, &gemm_config, k2, n(),
-         /*groups=*/1, /*k_stride=*/k2,
+         /*groups=*/1, /*unused_bl=*/0, /*k_stride=*/k2,
          /*accumulator_init=*/nullptr,
          /*weights=*/b.data(),
          /*int_extra_data0_fn=*/nullptr,
@@ -1945,7 +1945,7 @@ void GemmMicrokernelTester::Test(
   gemm_config.log2_sr = static_cast<uint8_t>(31 - math_clz_nonzero_u32(sr()));
 
   const size_t packed_w_stride =
-      packed_stride(&gemm_config, k2, /*k_stride=*/bl(), /*extra_bytes=*/0);
+      packed_stride(&gemm_config, k2, /*block_size=*/bl(), /*unused_kstride*/k2, /*extra_bytes=*/0);
   const size_t packed_w_size = packed_w_stride * round_up(n(), nr());
   xnnpack::Buffer<uint8_t, XNN_ALLOCATION_ALIGNMENT> packed_w(packed_w_size);
 
@@ -1973,7 +1973,7 @@ void GemmMicrokernelTester::Test(
     params.input_zero_point = 1;
     params.kernel_zero_point = b_zero_point();
     pack(/*flags=*/0, &gemm_config, k2, n(),
-         /*groups=*/1, /*k_stride=*/bl(),
+         /*groups=*/1, /*unused_bl=*/bl(), /*unused_kstride*/k2,
          /*accumulator_init=*/nullptr,
          /*weights=*/b.data(),
          /*int_extra_data0_fn=*/nullptr,
