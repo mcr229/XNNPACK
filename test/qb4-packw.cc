@@ -124,10 +124,10 @@ TEST_P(XnnTestQB4, nr_divides_nc_with_bias) {
 
 TEST_P(XnnTestQB4, nc_gt_nr) {
   TEST_REQUIRES_ARCH_FLAGS(GetParam().arch_flags);
-  for(size_t ni = 1; ni < GetParam().nr; ++ni){
+  for(size_t ni = 1 + GetParam().nr; ni < 2 * GetParam().nr; ++ni){
     PackWMicrokernelTester()
       .nullbias(false)
-      .n(2)
+      .n(ni)
       .k(GetParam().kblock)
       .nr(GetParam().nr * GetParam().nr_scale)
       .kr(GetParam().kr)

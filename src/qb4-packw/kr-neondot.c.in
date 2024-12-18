@@ -22,14 +22,13 @@ int8x16_t xnn_packed2planar(
     const uint8x16_t v,
     const uint8x16_t vmask,
     const uint8x16_t veor_mask,
-    const int32x4_t neg_zp)
+    const int32x4_t neg_zp,
+    const uint8x16_t vones)
 {
     const uint8x16_t vl = vshrq_n_u8(v, 4);    // isolate lower int 4
     const uint8x16_t vh = vandq_u8(v, vmask);  // isolate upper int 4
-    const uint32x4_t vh_acc = vpaddlq_u16(vpaddlq_u8(vh));
-    const uint32x4_t vl_acc = vpaddlq_u16(vpaddlq_u8(vl));
-    *vacc = vaddq_s32(*vacc, vreinterpretq_s32_u32(vh_acc));
-    *vacc = vaddq_s32(*vacc, vreinterpretq_s32_u32(vl_acc));
+    *vacc = vreinterpretq_s32_u32(vdotq_u32(vreinterpretq_u32_s32(*vacc), vh, vones));
+    *vacc = vreinterpretq_s32_u32(vdotq_u32(vreinterpretq_u32_s32(*vacc), vl, vones));
     *vacc = vaddq_s32(*vacc, neg_zp);
     const uint8x16_t v0123 = vzip1q_u8(vh, vl);
     const uint8x16_t v4567 = vzip2q_u8(vh, vl);
@@ -72,6 +71,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neondot(
   const int8x16_t vmask = vmovq_n_s8(INT8_C(0x0F));
   const uint8x16_t veor_mask = vmovq_n_u8(UINT8_C(0x88));
   const int32x4_t neg_zp = vmovq_n_s32(-64);
+  const uint8x16_t vones = vmovq_n_u8(UINT8_C(0x01));
 
   uint8_t* out = (uint8_t*) packed_weights;
   const int32_t* b = (const int32_t*) bias;
@@ -117,8 +117,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neondot(
 
                 $for N in range(0, NR, 4):
                     $for I in range(0, 4, 2):
-                        v${ABC[N:N+4]}_${I} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I}, vmask, veor_mask, neg_zp);
-                        v${ABC[N:N+4]}_${I+1} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I+1}, vmask, veor_mask, neg_zp);
+                        v${ABC[N:N+4]}_${I} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I}, vmask, veor_mask, neg_zp, vones);
+                        v${ABC[N:N+4]}_${I+1} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I+1}, vmask, veor_mask, neg_zp, vones);
 
                 $for I in range(0, 4):
                     $for N in range(0, NR, 4):
@@ -205,8 +205,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neondot(
 
                 $for N in range(0, NR, 4):
                     $for I in range(0, 4, 2):
-                        v${ABC[N:N+4]}_${I} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I}, vmask, veor_mask, neg_zp);
-                        v${ABC[N:N+4]}_${I+1} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I+1}, vmask, veor_mask, neg_zp);
+                        v${ABC[N:N+4]}_${I} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I}, vmask, veor_mask, neg_zp, vones);
+                        v${ABC[N:N+4]}_${I+1} = xnn_packed2planar(&ksum${ABC[N:N+4]}, v${ABC[N:N+4]}_${I+1}, vmask, veor_mask, neg_zp, vones);
 
                 $for I in range(0, 4):
                     $for N in range(0, NR, 4):

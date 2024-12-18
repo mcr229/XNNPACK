@@ -23,14 +23,13 @@ int8x16_t xnn_packed2planar(
     const uint8x16_t v,
     const uint8x16_t vmask,
     const uint8x16_t veor_mask,
-    const int32x4_t neg_zp)
+    const int32x4_t neg_zp,
+    const uint8x16_t vones)
 {
     const uint8x16_t vl = vshrq_n_u8(v, 4);    // isolate lower int 4
     const uint8x16_t vh = vandq_u8(v, vmask);  // isolate upper int 4
-    const uint32x4_t vh_acc = vpaddlq_u16(vpaddlq_u8(vh));
-    const uint32x4_t vl_acc = vpaddlq_u16(vpaddlq_u8(vl));
-    *vacc = vaddq_s32(*vacc, vreinterpretq_s32_u32(vh_acc));
-    *vacc = vaddq_s32(*vacc, vreinterpretq_s32_u32(vl_acc));
+    *vacc = vreinterpretq_s32_u32(vdotq_u32(vreinterpretq_u32_s32(*vacc), vh, vones));
+    *vacc = vreinterpretq_s32_u32(vdotq_u32(vreinterpretq_u32_s32(*vacc), vl, vones));
     *vacc = vaddq_s32(*vacc, neg_zp);
     const uint8x16_t v0123 = vzip1q_u8(vh, vl);
     const uint8x16_t v4567 = vzip2q_u8(vh, vl);
@@ -73,6 +72,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
   const int8x16_t vmask = vmovq_n_s8(INT8_C(0x0F));
   const uint8x16_t veor_mask = vmovq_n_u8(UINT8_C(0x88));
   const int32x4_t neg_zp = vmovq_n_s32(-64);
+  const uint8x16_t vones = vmovq_n_u8(UINT8_C(0x01));
 
   uint8_t* out = (uint8_t*) packed_weights;
   const int32_t* b = (const int32_t*) bias;
@@ -172,22 +172,22 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
                 uint32x4_t vCDEF_1 = vcombine_u32(vget_low_u32(vCD_13), vget_low_u32(vEF_13));
                 uint32x4_t vCDEF_3 = vcombine_u32(vget_high_u32(vCD_13), vget_high_u32(vEF_13));
 
-                v0123_0 = xnn_packed2planar(&ksum0123, v0123_0, vmask, veor_mask, neg_zp);
-                v0123_1 = xnn_packed2planar(&ksum0123, v0123_1, vmask, veor_mask, neg_zp);
-                v0123_2 = xnn_packed2planar(&ksum0123, v0123_2, vmask, veor_mask, neg_zp);
-                v0123_3 = xnn_packed2planar(&ksum0123, v0123_3, vmask, veor_mask, neg_zp);
-                v4567_0 = xnn_packed2planar(&ksum4567, v4567_0, vmask, veor_mask, neg_zp);
-                v4567_1 = xnn_packed2planar(&ksum4567, v4567_1, vmask, veor_mask, neg_zp);
-                v4567_2 = xnn_packed2planar(&ksum4567, v4567_2, vmask, veor_mask, neg_zp);
-                v4567_3 = xnn_packed2planar(&ksum4567, v4567_3, vmask, veor_mask, neg_zp);
-                v89AB_0 = xnn_packed2planar(&ksum89AB, v89AB_0, vmask, veor_mask, neg_zp);
-                v89AB_1 = xnn_packed2planar(&ksum89AB, v89AB_1, vmask, veor_mask, neg_zp);
-                v89AB_2 = xnn_packed2planar(&ksum89AB, v89AB_2, vmask, veor_mask, neg_zp);
-                v89AB_3 = xnn_packed2planar(&ksum89AB, v89AB_3, vmask, veor_mask, neg_zp);
-                vCDEF_0 = xnn_packed2planar(&ksumCDEF, vCDEF_0, vmask, veor_mask, neg_zp);
-                vCDEF_1 = xnn_packed2planar(&ksumCDEF, vCDEF_1, vmask, veor_mask, neg_zp);
-                vCDEF_2 = xnn_packed2planar(&ksumCDEF, vCDEF_2, vmask, veor_mask, neg_zp);
-                vCDEF_3 = xnn_packed2planar(&ksumCDEF, vCDEF_3, vmask, veor_mask, neg_zp);
+                v0123_0 = xnn_packed2planar(&ksum0123, v0123_0, vmask, veor_mask, neg_zp, vones);
+                v0123_1 = xnn_packed2planar(&ksum0123, v0123_1, vmask, veor_mask, neg_zp, vones);
+                v0123_2 = xnn_packed2planar(&ksum0123, v0123_2, vmask, veor_mask, neg_zp, vones);
+                v0123_3 = xnn_packed2planar(&ksum0123, v0123_3, vmask, veor_mask, neg_zp, vones);
+                v4567_0 = xnn_packed2planar(&ksum4567, v4567_0, vmask, veor_mask, neg_zp, vones);
+                v4567_1 = xnn_packed2planar(&ksum4567, v4567_1, vmask, veor_mask, neg_zp, vones);
+                v4567_2 = xnn_packed2planar(&ksum4567, v4567_2, vmask, veor_mask, neg_zp, vones);
+                v4567_3 = xnn_packed2planar(&ksum4567, v4567_3, vmask, veor_mask, neg_zp, vones);
+                v89AB_0 = xnn_packed2planar(&ksum89AB, v89AB_0, vmask, veor_mask, neg_zp, vones);
+                v89AB_1 = xnn_packed2planar(&ksum89AB, v89AB_1, vmask, veor_mask, neg_zp, vones);
+                v89AB_2 = xnn_packed2planar(&ksum89AB, v89AB_2, vmask, veor_mask, neg_zp, vones);
+                v89AB_3 = xnn_packed2planar(&ksum89AB, v89AB_3, vmask, veor_mask, neg_zp, vones);
+                vCDEF_0 = xnn_packed2planar(&ksumCDEF, vCDEF_0, vmask, veor_mask, neg_zp, vones);
+                vCDEF_1 = xnn_packed2planar(&ksumCDEF, vCDEF_1, vmask, veor_mask, neg_zp, vones);
+                vCDEF_2 = xnn_packed2planar(&ksumCDEF, vCDEF_2, vmask, veor_mask, neg_zp, vones);
+                vCDEF_3 = xnn_packed2planar(&ksumCDEF, vCDEF_3, vmask, veor_mask, neg_zp, vones);
 
                 vst1q_u8(&out[0], v0123_0);
                 vst1q_u8(&out[16], v4567_0);
@@ -414,22 +414,22 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
                 uint32x4_t vCDEF_1 = vcombine_u32(vget_low_u32(vCD_13), vget_low_u32(vEF_13));
                 uint32x4_t vCDEF_3 = vcombine_u32(vget_high_u32(vCD_13), vget_high_u32(vEF_13));
 
-                v0123_0 = xnn_packed2planar(&ksum0123, v0123_0, vmask, veor_mask, neg_zp);
-                v0123_1 = xnn_packed2planar(&ksum0123, v0123_1, vmask, veor_mask, neg_zp);
-                v0123_2 = xnn_packed2planar(&ksum0123, v0123_2, vmask, veor_mask, neg_zp);
-                v0123_3 = xnn_packed2planar(&ksum0123, v0123_3, vmask, veor_mask, neg_zp);
-                v4567_0 = xnn_packed2planar(&ksum4567, v4567_0, vmask, veor_mask, neg_zp);
-                v4567_1 = xnn_packed2planar(&ksum4567, v4567_1, vmask, veor_mask, neg_zp);
-                v4567_2 = xnn_packed2planar(&ksum4567, v4567_2, vmask, veor_mask, neg_zp);
-                v4567_3 = xnn_packed2planar(&ksum4567, v4567_3, vmask, veor_mask, neg_zp);
-                v89AB_0 = xnn_packed2planar(&ksum89AB, v89AB_0, vmask, veor_mask, neg_zp);
-                v89AB_1 = xnn_packed2planar(&ksum89AB, v89AB_1, vmask, veor_mask, neg_zp);
-                v89AB_2 = xnn_packed2planar(&ksum89AB, v89AB_2, vmask, veor_mask, neg_zp);
-                v89AB_3 = xnn_packed2planar(&ksum89AB, v89AB_3, vmask, veor_mask, neg_zp);
-                vCDEF_0 = xnn_packed2planar(&ksumCDEF, vCDEF_0, vmask, veor_mask, neg_zp);
-                vCDEF_1 = xnn_packed2planar(&ksumCDEF, vCDEF_1, vmask, veor_mask, neg_zp);
-                vCDEF_2 = xnn_packed2planar(&ksumCDEF, vCDEF_2, vmask, veor_mask, neg_zp);
-                vCDEF_3 = xnn_packed2planar(&ksumCDEF, vCDEF_3, vmask, veor_mask, neg_zp);
+                v0123_0 = xnn_packed2planar(&ksum0123, v0123_0, vmask, veor_mask, neg_zp, vones);
+                v0123_1 = xnn_packed2planar(&ksum0123, v0123_1, vmask, veor_mask, neg_zp, vones);
+                v0123_2 = xnn_packed2planar(&ksum0123, v0123_2, vmask, veor_mask, neg_zp, vones);
+                v0123_3 = xnn_packed2planar(&ksum0123, v0123_3, vmask, veor_mask, neg_zp, vones);
+                v4567_0 = xnn_packed2planar(&ksum4567, v4567_0, vmask, veor_mask, neg_zp, vones);
+                v4567_1 = xnn_packed2planar(&ksum4567, v4567_1, vmask, veor_mask, neg_zp, vones);
+                v4567_2 = xnn_packed2planar(&ksum4567, v4567_2, vmask, veor_mask, neg_zp, vones);
+                v4567_3 = xnn_packed2planar(&ksum4567, v4567_3, vmask, veor_mask, neg_zp, vones);
+                v89AB_0 = xnn_packed2planar(&ksum89AB, v89AB_0, vmask, veor_mask, neg_zp, vones);
+                v89AB_1 = xnn_packed2planar(&ksum89AB, v89AB_1, vmask, veor_mask, neg_zp, vones);
+                v89AB_2 = xnn_packed2planar(&ksum89AB, v89AB_2, vmask, veor_mask, neg_zp, vones);
+                v89AB_3 = xnn_packed2planar(&ksum89AB, v89AB_3, vmask, veor_mask, neg_zp, vones);
+                vCDEF_0 = xnn_packed2planar(&ksumCDEF, vCDEF_0, vmask, veor_mask, neg_zp, vones);
+                vCDEF_1 = xnn_packed2planar(&ksumCDEF, vCDEF_1, vmask, veor_mask, neg_zp, vones);
+                vCDEF_2 = xnn_packed2planar(&ksumCDEF, vCDEF_2, vmask, veor_mask, neg_zp, vones);
+                vCDEF_3 = xnn_packed2planar(&ksumCDEF, vCDEF_3, vmask, veor_mask, neg_zp, vones);
 
                 vst1q_u8(&out[0], v0123_0);
                 vst1q_u8(&out[16], v4567_0);

@@ -526,7 +526,7 @@ class PackWMicrokernelTester {
       n() * (k() / bl())
     );
     xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> pack_bf16_scales(
-      n() * (k() / bl())
+      packed_n() * (k() / bl())
     );
 
     std::iota(weights.begin(), weights.end(), 0);
@@ -580,7 +580,7 @@ class PackWMicrokernelTester {
         n(), nr(), nr(), stride, stride, 0, (float*) bias_data, bias_start
       );
     }
-    pack_bf16_scales_fn(scale_data, pack_bf16_scales.data(), n(), nr(), k_num_blocks);
+    pack_bf16_scales_fn(scale_data, pack_bf16_scales.data(), packed_n(), nr(), k_num_blocks);
 
     // Call optimized micro-kernel.
     packw(/*g=*/1, n(), k(), nr(), kr(), sr(), bl(),

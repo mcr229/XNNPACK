@@ -154,22 +154,23 @@ static void qb4_packw(benchmark::State& state,
 
   std::random_device random_device;
   auto rng = std::mt19937(random_device());
+  size_t packed_weight_size = rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float);
 
   // Computer num_buffers that fit cache with source weights + packed_weights.
   const size_t num_buffers = 1 +
     benchmark::utils::DivideRoundUp<size_t>(benchmark::utils::GetMaxCacheSize(),
-      batch * (dim_n * dim_k + rounded_n * rounded_k + rounded_n * sizeof(uint32_t)));
+      batch * (dim_n * dim_k + packed_weight_size));
 
   xnnpack::Buffer<uint8_t, XNN_ALLOCATION_ALIGNMENT> weights(num_buffers * batch *
                                                     dim_n * (rounded_k >> 1));
   xnnpack::fill_uniform_random_bits(weights.data(), weights.size(), rng);
   xnnpack::Buffer<int8_t, XNN_ALLOCATION_ALIGNMENT> packed_weights(
       num_buffers * batch *
-      (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t)));
+      (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t)) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float));
   xnnpack::Buffer<int32_t, XNN_ALLOCATION_ALIGNMENT> bias(num_buffers * batch * dim_n);
   xnnpack::fill_uniform_random_bits(bias.data(), bias.size(), rng);
   size_t num_blocks = rounded_k / bl;
-  xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(num_blocks * batch * dim_n);
+  xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(num_blocks * batch * rounded_n);
   xnnpack::fill_uniform_random_bits(bf16_scales.data(), bf16_scales.size(), rng);
 
   const xnn_qs8_qc4w_packing_params packing_params = { 1, 8 };
@@ -184,7 +185,7 @@ static void qb4_packw(benchmark::State& state,
       weights.data() + buffer_index * batch * dim_n * (rounded_k >> 1),
       /*bias=*/bias.data() + buffer_index * batch * dim_n, 
       /*scale=*/bf16_scales.data() + buffer_index * batch * dim_n,
-      packed_weights.data() + buffer_index * batch * (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * sizeof(uint16_t)),
+      packed_weights.data() + buffer_index * batch * (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float)),
       /*extra_bytes_bl=*/sizeof(uint16_t) * nr, sizeof(float), &packing_params);
   }
 
@@ -969,13 +970,13 @@ static void qb4_packw_goi__reference(
 static void qb4_packw_x16c4_goi__reference(benchmark::State& state, const char* net) {
   qb4_packw(state,
     (xnn_qb4_packw_gemm_goi_ukernel_fn) qb4_packw_goi__reference,
-    /*nr=*/16, /*kr=*/4, /*sr=*/1, /*bl=*/32, true);
+    /*nr=*/16, /*kr=*/4, /*sr=*/1, /*bl=*/32);
 }
 
 static void qb4_packw_x16c8_goi__reference(benchmark::State& state, const char* net) {
   qb4_packw(state,
     (xnn_qb4_packw_gemm_goi_ukernel_fn) qb4_packw_goi__reference,
-    /*nr=*/16, /*kr=*/8, /*sr=*/1, /*bl=*/32, true);
+    /*nr=*/16, /*kr=*/8, /*sr=*/1, /*bl=*/32);
 }
 
 BENCHMARK_BGEMM(qb4_packw_x16c4_goi__reference)
