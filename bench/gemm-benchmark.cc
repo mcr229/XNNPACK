@@ -735,7 +735,7 @@ void GEMMBenchmark(benchmark::State& state,
   gemm_config.log2_sr = static_cast<uint8_t>(31 - math_clz_nonzero_u32(sr));
 
   const size_t packed_w_stride =
-      packed_stride(&gemm_config, kc, /*k_stride=*/kc, /*extra_bytes=*/0);
+      packed_stride(&gemm_config, kc, /*unused_blocksize=*/0,/*k_stride=*/kc, /*extra_bytes=*/0);
   const size_t packed_w_size = packed_w_stride * round_up(nc, nr);
 
   const size_t c_elements = mc * nc;
@@ -760,7 +760,7 @@ void GEMMBenchmark(benchmark::State& state,
   const xnn_qs8_qc4w_packing_params packing_params = {/*input_zero_point=*/1,
                                                       /*kernel_zero_point=*/8};
   pack_weights(/*flags=*/0, &gemm_config, kc, nc,
-               /*groups=*/1, /*k_stride=*/kc,
+               /*groups=*/1, /*unused_blocksize=*/0, /*k_stride=*/kc,
                /*accumulator_init=*/nullptr,
                /*weights=*/k.data(),
                /*int_extra_data0_fn=*/nullptr,
@@ -770,7 +770,7 @@ void GEMMBenchmark(benchmark::State& state,
                nullptr,
                /*extra_data1=*/kernel_scale.data(),
                /*extra_data1_size=*/sizeof(float),
-               /*packed_weights_ptr=*/w.data(), &packing_params);
+               /*packed_weights_ptr=*/w.data(), &packing_params, nullptr);
 
   xnnpack::Buffer<float> c(c_elements * num_buffers);
 
@@ -852,7 +852,7 @@ void GEMMBenchmark(benchmark::State& state,
   gemm_config.log2_sr = static_cast<uint8_t>(31 - math_clz_nonzero_u32(sr));
 
   const size_t packed_w_stride =
-      packed_stride(&gemm_config, k2, /*k_stride=*/bl, /*extra_bytes=*/0);
+      packed_stride(&gemm_config, k2, /*k_stride=*/bl, /*unused_k_stride=*/0, /*extra_bytes=*/0);
   const size_t packed_w_size = packed_w_stride * round_up(nc, nr);
 
   const size_t c_elements = mc * nc;
@@ -879,7 +879,7 @@ void GEMMBenchmark(benchmark::State& state,
   const xnn_qs8_qc4w_packing_params packing_params = {/*input_zero_point=*/1,
                                                       /*kernel_zero_point=*/8};
   pack_weights(/*flags=*/0, &gemm_config, k2, nc,
-               /*groups=*/1, /*k_stride=*/bl,
+               /*groups=*/1, /*block_size=*/bl, /*unused_k_stride=*/0,
                /*accumulator_init=*/nullptr,
                /*weights=*/k.data(),
                /*int_extra_data0_fn=*/nullptr,
@@ -889,7 +889,7 @@ void GEMMBenchmark(benchmark::State& state,
                nullptr,
                /*extra_data1=*/kernel_scale2d.data(),
                /*extra_data1_size=*/sizeof(float),
-               /*packed_weights_ptr=*/w.data(), &packing_params);
+               /*packed_weights_ptr=*/w.data(), &packing_params, nullptr);
 
   xnnpack::Buffer<float> c(c_elements * num_buffers);
 

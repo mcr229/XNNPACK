@@ -1832,7 +1832,7 @@ void GemmMicrokernelTester::Test(
          nullptr,
          /*extra_data1=*/kernel_scale.data(),
          /*extra_data1_size=*/sizeof(float),
-         /*packed_weights_ptr=*/packed_w.data(), &params);
+         /*packed_weights_ptr=*/packed_w.data(), &params, nullptr);
 
     // Compute 32-bit results and output quantization arguments.
     std::fill(c_ref.begin(), c_ref.end(), 0);
@@ -1983,7 +1983,7 @@ void GemmMicrokernelTester::Test(
          nullptr,
          /*extra_data1=*/kernel_scale2d.data(),
          /*extra_data1_size=*/sizeof(float),
-         /*packed_weights_ptr=*/packed_w.data(), &params);
+         /*packed_weights_ptr=*/packed_w.data(), &params, nullptr);
 
     size_t stride =  nr() * (packed_k_bytes + /* scales= */ num_blocks * sizeof(uint16_t) + /* ksum= */ sizeof(float) + /* bias= */ sizeof(float));
     uintptr_t start = (uintptr_t) packed_w.data() + stride - sizeof(float) * nr();
