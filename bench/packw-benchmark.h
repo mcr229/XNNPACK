@@ -154,7 +154,8 @@ static void qb4_packw(benchmark::State& state,
 
   std::random_device random_device;
   auto rng = std::mt19937(random_device());
-  size_t packed_weight_size = rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float);
+  size_t num_blocks = rounded_k / bl;
+  size_t packed_weight_size = rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * num_blocks * sizeof(uint16_t) + rounded_n * sizeof(float);
 
   // Computer num_buffers that fit cache with source weights + packed_weights.
   const size_t num_buffers = 1 +
@@ -165,11 +166,9 @@ static void qb4_packw(benchmark::State& state,
                                                     dim_n * (rounded_k >> 1));
   xnnpack::fill_uniform_random_bits(weights.data(), weights.size(), rng);
   xnnpack::Buffer<int8_t, XNN_ALLOCATION_ALIGNMENT> packed_weights(
-      num_buffers * batch *
-      (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t)) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float));
+      num_buffers * batch * packed_weight_size);
   xnnpack::Buffer<int32_t, XNN_ALLOCATION_ALIGNMENT> bias(num_buffers * batch * dim_n);
   xnnpack::fill_uniform_random_bits(bias.data(), bias.size(), rng);
-  size_t num_blocks = rounded_k / bl;
   xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(num_blocks * batch * rounded_n);
   xnnpack::fill_uniform_random_bits(bf16_scales.data(), bf16_scales.size(), rng);
 
@@ -184,8 +183,8 @@ static void qb4_packw(benchmark::State& state,
     packw(1, dim_n, rounded_k, nr, kr, sr, bl,
       weights.data() + buffer_index * batch * dim_n * (rounded_k >> 1),
       /*bias=*/bias.data() + buffer_index * batch * dim_n, 
-      /*scale=*/bf16_scales.data() + buffer_index * batch * dim_n,
-      packed_weights.data() + buffer_index * batch * (rounded_n * (rounded_k >> 1) + rounded_n * sizeof(uint32_t) + rounded_n * sizeof(uint16_t) + rounded_n * sizeof(float)),
+      /*scale=*/bf16_scales.data() + buffer_index * batch * dim_n * num_blocks,
+      packed_weights.data() + buffer_index * batch * packed_weight_size,
       /*extra_bytes_bl=*/sizeof(uint16_t) * nr, sizeof(float), &packing_params);
   }
 

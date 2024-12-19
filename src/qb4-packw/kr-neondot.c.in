@@ -104,7 +104,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neondot(
             // KC Main loop multiple of 16x32
             for(; k >= 32; k-=32) {
                 $for N in range(0, NR):
-                    uint32x4_t w${ABC[N]}x0123 = vld1q_u32((uint32_t*) w${N});
+                    uint32x4_t w${ABC[N]}x0123 = vld1q_u32((uint32_t*) w${N}); w${N} += ${4 * KR};
 
                 $for N in range(0, NR, 2):
                     uint32x4_t v${ABC[N]}${ABC[N+1]}_02 = vtrn1q_u32(w${ABC[N]}x0123, w${ABC[N+1]}x0123);
@@ -124,8 +124,6 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neondot(
                     $for N in range(0, NR, 4):
                         vst1q_u8(&out[${(I*NR + N)*KR}], v${ABC[N:N+4]}_${I});
 
-                $for N in range(0, NR):
-                    w${N} += ${4 * KR};
                 out += ${4*NR*KR};
             }
 

@@ -121,22 +121,22 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
 
             // KC Main loop multiple of 16x32
             for(; k >= 32; k-=32) {
-                uint32x4_t w0x0123 = vld1q_u32((uint32_t*) w0);
-                uint32x4_t w1x0123 = vld1q_u32((uint32_t*) w1);
-                uint32x4_t w2x0123 = vld1q_u32((uint32_t*) w2);
-                uint32x4_t w3x0123 = vld1q_u32((uint32_t*) w3);
-                uint32x4_t w4x0123 = vld1q_u32((uint32_t*) w4);
-                uint32x4_t w5x0123 = vld1q_u32((uint32_t*) w5);
-                uint32x4_t w6x0123 = vld1q_u32((uint32_t*) w6);
-                uint32x4_t w7x0123 = vld1q_u32((uint32_t*) w7);
-                uint32x4_t w8x0123 = vld1q_u32((uint32_t*) w8);
-                uint32x4_t w9x0123 = vld1q_u32((uint32_t*) w9);
-                uint32x4_t wAx0123 = vld1q_u32((uint32_t*) w10);
-                uint32x4_t wBx0123 = vld1q_u32((uint32_t*) w11);
-                uint32x4_t wCx0123 = vld1q_u32((uint32_t*) w12);
-                uint32x4_t wDx0123 = vld1q_u32((uint32_t*) w13);
-                uint32x4_t wEx0123 = vld1q_u32((uint32_t*) w14);
-                uint32x4_t wFx0123 = vld1q_u32((uint32_t*) w15);
+                uint32x4_t w0x0123 = vld1q_u32((uint32_t*) w0); w0 += 16;
+                uint32x4_t w1x0123 = vld1q_u32((uint32_t*) w1); w1 += 16;
+                uint32x4_t w2x0123 = vld1q_u32((uint32_t*) w2); w2 += 16;
+                uint32x4_t w3x0123 = vld1q_u32((uint32_t*) w3); w3 += 16;
+                uint32x4_t w4x0123 = vld1q_u32((uint32_t*) w4); w4 += 16;
+                uint32x4_t w5x0123 = vld1q_u32((uint32_t*) w5); w5 += 16;
+                uint32x4_t w6x0123 = vld1q_u32((uint32_t*) w6); w6 += 16;
+                uint32x4_t w7x0123 = vld1q_u32((uint32_t*) w7); w7 += 16;
+                uint32x4_t w8x0123 = vld1q_u32((uint32_t*) w8); w8 += 16;
+                uint32x4_t w9x0123 = vld1q_u32((uint32_t*) w9); w9 += 16;
+                uint32x4_t wAx0123 = vld1q_u32((uint32_t*) w10); w10 += 16;
+                uint32x4_t wBx0123 = vld1q_u32((uint32_t*) w11); w11 += 16;
+                uint32x4_t wCx0123 = vld1q_u32((uint32_t*) w12); w12 += 16;
+                uint32x4_t wDx0123 = vld1q_u32((uint32_t*) w13); w13 += 16;
+                uint32x4_t wEx0123 = vld1q_u32((uint32_t*) w14); w14 += 16;
+                uint32x4_t wFx0123 = vld1q_u32((uint32_t*) w15); w15 += 16;
 
                 uint32x4_t v01_02 = vtrn1q_u32(w0x0123, w1x0123);
                 uint32x4_t v01_13 = vtrn2q_u32(w0x0123, w1x0123);
@@ -206,22 +206,6 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
                 vst1q_u8(&out[224], v89AB_3);
                 vst1q_u8(&out[240], vCDEF_3);
 
-                w0 += 16;
-                w1 += 16;
-                w2 += 16;
-                w3 += 16;
-                w4 += 16;
-                w5 += 16;
-                w6 += 16;
-                w7 += 16;
-                w8 += 16;
-                w9 += 16;
-                w10 += 16;
-                w11 += 16;
-                w12 += 16;
-                w13 += 16;
-                w14 += 16;
-                w15 += 16;
                 out += 256;
             }
 
