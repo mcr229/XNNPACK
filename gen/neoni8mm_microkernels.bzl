@@ -31,6 +31,7 @@ PROD_NEONI8MM_MICROKERNEL_SRCS = [
 ]
 
 NON_PROD_NEONI8MM_MICROKERNEL_SRCS = [
+    "src/qb4-packw/gen/qb4-packw-x16c8-gemm-goi-neoni8mm.c",
     "src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-1x8c8-minmax-neoni8mm.c",
     "src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-1x32c8-minmax-neoni8mm.c",
     "src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-2x8c8-minmax-neoni8mm.c",
