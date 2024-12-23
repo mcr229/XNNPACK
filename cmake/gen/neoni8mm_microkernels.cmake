@@ -10,6 +10,7 @@
 
 
 SET(PROD_NEONI8MM_MICROKERNEL_SRCS
+  src/qb4-packw/gen/qb4-packw-x16c8-gemm-goi-neoni8mm.c
   src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-1x16c8-minmax-neoni8mm.c
   src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-4x16c8-minmax-neoni8mm.c
   src/qd8-f16-qc4w-gemm/gen/qd8-f16-qc4w-gemm-1x16c8-minmax-neoni8mm.c
@@ -34,7 +35,6 @@ SET(PROD_NEONI8MM_MICROKERNEL_SRCS
   src/qs8-qc8w-igemm/gen/qs8-qc8w-igemm-4x16c8-minmax-fp32-neoni8mm.c)
 
 SET(NON_PROD_NEONI8MM_MICROKERNEL_SRCS
-  src/qb4-packw/gen/qb4-packw-x16c8-gemm-goi-neoni8mm.c
   src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-1x8c8-minmax-neoni8mm.c
   src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-1x32c8-minmax-neoni8mm.c
   src/qd8-f16-qb4w-gemm/gen/qd8-f16-qb4w-gemm-2x8c8-minmax-neoni8mm.c

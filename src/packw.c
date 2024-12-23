@@ -169,7 +169,7 @@ void xnn_pack_qb4_x16c8_weights_and_biases(
       block_size, k_stride, accumulator_init, weights, init_extra_data0_fn,
       extra_data0, extra_data0_element_size, init_extra_data1_fn, extra_data1,
       extra_data1_element_size, packed_weights_ptr, 
-      (xnn_packw_gemm_goi_bl_ukernel_fn) xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar,
+      (xnn_packw_gemm_goi_bl_ukernel_fn) xnn_qb4_packw_gemm_goi_ukernel_x16c8__neoni8mm,
       params, threadpool);
   }
 }
