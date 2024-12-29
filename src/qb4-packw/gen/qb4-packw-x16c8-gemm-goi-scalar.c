@@ -90,6 +90,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar(
         const uint8_t* w14 = w13 + (kc >> 1);
         const uint8_t* w15 = w14 + (kc >> 1);
 
+        const uint16_t* s0 = s;
 
         size_t kb = kc;
         // Process k by blocks (bl)
@@ -836,23 +837,23 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar(
 
                 out += 128;
             }
-            float scale0 = math_cvt_fp32_bf16(s[0]);
-            float scale1 = math_cvt_fp32_bf16(s[1]);
-            float scale2 = math_cvt_fp32_bf16(s[2]);
-            float scale3 = math_cvt_fp32_bf16(s[3]);
-            float scale4 = math_cvt_fp32_bf16(s[4]);
-            float scale5 = math_cvt_fp32_bf16(s[5]);
-            float scale6 = math_cvt_fp32_bf16(s[6]);
-            float scale7 = math_cvt_fp32_bf16(s[7]);
-            float scale8 = math_cvt_fp32_bf16(s[8]);
-            float scale9 = math_cvt_fp32_bf16(s[9]);
-            float scale10 = math_cvt_fp32_bf16(s[10]);
-            float scale11 = math_cvt_fp32_bf16(s[11]);
-            float scale12 = math_cvt_fp32_bf16(s[12]);
-            float scale13 = math_cvt_fp32_bf16(s[13]);
-            float scale14 = math_cvt_fp32_bf16(s[14]);
-            float scale15 = math_cvt_fp32_bf16(s[15]);
-            s += 16;
+            float scale0 = math_cvt_fp32_bf16(s0[0]);
+            float scale1 = math_cvt_fp32_bf16(s0[1]);
+            float scale2 = math_cvt_fp32_bf16(s0[2]);
+            float scale3 = math_cvt_fp32_bf16(s0[3]);
+            float scale4 = math_cvt_fp32_bf16(s0[4]);
+            float scale5 = math_cvt_fp32_bf16(s0[5]);
+            float scale6 = math_cvt_fp32_bf16(s0[6]);
+            float scale7 = math_cvt_fp32_bf16(s0[7]);
+            float scale8 = math_cvt_fp32_bf16(s0[8]);
+            float scale9 = math_cvt_fp32_bf16(s0[9]);
+            float scale10 = math_cvt_fp32_bf16(s0[10]);
+            float scale11 = math_cvt_fp32_bf16(s0[11]);
+            float scale12 = math_cvt_fp32_bf16(s0[12]);
+            float scale13 = math_cvt_fp32_bf16(s0[13]);
+            float scale14 = math_cvt_fp32_bf16(s0[14]);
+            float scale15 = math_cvt_fp32_bf16(s0[15]);
+            s0 += nc;
 
 
             packed_k_scaled_sum[0] -= (float)ksum0 * izp * scale0;
@@ -931,6 +932,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar(
         }
         out += 16 * sizeof(uint32_t);
         w0 = w15;
+        s += 16;
     }
 
     // NC remainder (1..15)
@@ -953,6 +955,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar(
         ((float*) out)[14] = 0;
         ((float*) out)[15] = 0;
         out += 16 * sizeof(float);
+        const uint16_t* s0 = s;
         // NR remainder has less than 16
         const uint8_t* w1 = w0 + (kc >> 1);
         if XNN_UNPREDICTABLE(n < 2) {
@@ -1710,23 +1713,23 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c8__scalar(
 
                 out += 128;
             }
-            float scale0 = math_cvt_fp32_bf16(s[0]);
-            float scale1 = math_cvt_fp32_bf16(s[1]);
-            float scale2 = math_cvt_fp32_bf16(s[2]);
-            float scale3 = math_cvt_fp32_bf16(s[3]);
-            float scale4 = math_cvt_fp32_bf16(s[4]);
-            float scale5 = math_cvt_fp32_bf16(s[5]);
-            float scale6 = math_cvt_fp32_bf16(s[6]);
-            float scale7 = math_cvt_fp32_bf16(s[7]);
-            float scale8 = math_cvt_fp32_bf16(s[8]);
-            float scale9 = math_cvt_fp32_bf16(s[9]);
-            float scale10 = math_cvt_fp32_bf16(s[10]);
-            float scale11 = math_cvt_fp32_bf16(s[11]);
-            float scale12 = math_cvt_fp32_bf16(s[12]);
-            float scale13 = math_cvt_fp32_bf16(s[13]);
-            float scale14 = math_cvt_fp32_bf16(s[14]);
-            float scale15 = math_cvt_fp32_bf16(s[15]);
-            s += 16;
+            float scale0 = math_cvt_fp32_bf16(s0[0]);
+            float scale1 = math_cvt_fp32_bf16(s0[1]);
+            float scale2 = math_cvt_fp32_bf16(s0[2]);
+            float scale3 = math_cvt_fp32_bf16(s0[3]);
+            float scale4 = math_cvt_fp32_bf16(s0[4]);
+            float scale5 = math_cvt_fp32_bf16(s0[5]);
+            float scale6 = math_cvt_fp32_bf16(s0[6]);
+            float scale7 = math_cvt_fp32_bf16(s0[7]);
+            float scale8 = math_cvt_fp32_bf16(s0[8]);
+            float scale9 = math_cvt_fp32_bf16(s0[9]);
+            float scale10 = math_cvt_fp32_bf16(s0[10]);
+            float scale11 = math_cvt_fp32_bf16(s0[11]);
+            float scale12 = math_cvt_fp32_bf16(s0[12]);
+            float scale13 = math_cvt_fp32_bf16(s0[13]);
+            float scale14 = math_cvt_fp32_bf16(s0[14]);
+            float scale15 = math_cvt_fp32_bf16(s0[15]);
+            s0 += nc;
 
 
             packed_k_scaled_sum[0] -= (float)ksum0 * izp * scale0;

@@ -61,6 +61,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
         $for N in range(1, NR):
             const uint8_t* w${N} = w${N-1} + (kc >> 1);
 
+        const uint16_t* s0 = s;
 
         size_t kb = kc;
         // Process k by blocks (bl)
@@ -87,8 +88,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
                 out += ${NR*KR};
             }
             $for N in range(NR):
-                float scale${N} = math_cvt_fp32_bf16(s[${N}]);
-            s += ${NR};
+                float scale${N} = math_cvt_fp32_bf16(s0[${N}]);
+            s0 += nc;
 
 
             $for N in range(NR):
@@ -111,6 +112,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
         }
         out += ${NR} * sizeof(uint32_t);
         w0 = w15;
+        s += ${NR};
     }
 
     // NC remainder (1..${NR-1})
@@ -119,6 +121,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
         $for N in range(NR):
             ((float*) out)[${N}] = 0;
         out += ${NR} * sizeof(float);
+        const uint16_t* s0 = s;
         $if NR > 2:
             // NR remainder has less than ${NR}
             $for N in range(1, NR-1):
@@ -157,8 +160,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
                 out += ${NR*KR};
             }
             $for N in range(NR):
-                float scale${N} = math_cvt_fp32_bf16(s[${N}]);
-            s += ${NR};
+                float scale${N} = math_cvt_fp32_bf16(s0[${N}]);
+            s0 += nc;
 
 
             $for N in range(NR-1):

@@ -97,6 +97,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neoni8mm(
         $for N in range(1, NR):
             const uint8_t* w${N} = w${N-1} + (kc >> 1);
 
+        const uint16_t* s0 = s;
+
         size_t kb = kc;
         // Process k by blocks (bl)
         for (; kb >= bl; kb-=bl) {
@@ -127,7 +129,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neoni8mm(
             }
 
             $for N in range(0, NR, 4):
-                float32x4_t f_scales${ABC[N:N+4]} = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
+                float32x4_t f_scales${ABC[N:N+4]} = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + ${N}), 16));
+            s0 += nc;
 
             $for N in range(0, NR, 4):
                 float32x4_t f_ksum${ABC[N:N+4]} = vcvtq_f32_s32(ksum${ABC[N:N+4]});
@@ -158,6 +161,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neoni8mm(
         }
         out += ${NR} * sizeof(uint32_t);
         w0 = w15;
+        s += ${NR};
     }
 
     if XNN_UNLIKELY(n != 0){
@@ -177,6 +181,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neoni8mm(
                     if XNN_UNPREDICTABLE(n < ${N+1}) {
                         w${N} = w${N-1};
                     }
+        const uint16_t* s0 = s;
 
         size_t kb = kc;
         // Process k by blocks (bl)
@@ -208,7 +213,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__neoni8mm(
             }
 
             $for N in range(0, NR, 4):
-                float32x4_t f_scales${ABC[N:N+4]} = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
+                float32x4_t f_scales${ABC[N:N+4]} = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + ${N}), 16));
+            s0 += n;
 
             $for N in range(0, NR, 4):
                 float32x4_t f_ksum${ABC[N:N+4]} = vcvtq_f32_s32(ksum${ABC[N:N+4]});

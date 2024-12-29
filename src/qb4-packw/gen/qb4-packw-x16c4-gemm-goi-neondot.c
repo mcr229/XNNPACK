@@ -109,6 +109,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
         const uint8_t* w14 = w13 + (kc >> 1);
         const uint8_t* w15 = w14 + (kc >> 1);
 
+        const uint16_t* s0 = s;
         size_t kb = kc;
         // Process k by blocks (bl)
         for (; kb >= bl; kb-=bl) {
@@ -209,10 +210,11 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
                 out += 256;
             }
 
-            float32x4_t f_scales0123 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
+            float32x4_t f_scales0123 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 0), 16));
+            float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 4), 16));
+            float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 8), 16));
+            float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 12), 16));
+            s0 += nc;
 
             float32x4_t f_ksum0123 = vcvtq_f32_s32(ksum0123);
             f_ksum0123 = vmulq_f32(f_ksum0123, vzeropoint);
@@ -264,6 +266,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
         }
         out += 16 * sizeof(uint32_t);
         w0 = w15;
+        s += 16;
     }
 
     if XNN_UNLIKELY(n != 0){
@@ -274,6 +277,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
         float32x4_t packed_k_scaled_sums89AB = vdupq_n_f32(0.0f);
         float32x4_t packed_k_scaled_sumsCDEF = vdupq_n_f32(0.0f);
         out += 16 * sizeof(float);
+        const uint16_t* s0 = s;
         const uint8_t* w1 = w0 + (kc >> 1);
         if XNN_UNPREDICTABLE(n < 2) {
             w1 = w0;
@@ -451,10 +455,11 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
                 out += 256;
             }
 
-            float32x4_t f_scales0123 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
-            float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s), 16)); s = (const uint16_t*) s + 4;
+            float32x4_t f_scales0123 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 0), 16));
+            float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 4), 16));
+            float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 8), 16));
+            float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 12), 16));
+            s0 += n;
 
             float32x4_t f_ksum0123 = vcvtq_f32_s32(ksum0123);
             f_ksum0123 = vmulq_f32(f_ksum0123, vzeropoint);
