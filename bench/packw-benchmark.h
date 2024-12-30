@@ -193,11 +193,11 @@ static void qb4_packw(benchmark::State& state,
     state.counters["cpufreq"] = cpu_frequency;
   }
 
-  const size_t elements_per_iteration = batch * dim_n * (rounded_k >> 1);
+  const size_t elements_per_iteration = batch * dim_n * dim_k;
   state.counters["elements"] =
     benchmark::Counter(uint64_t(state.iterations()) * elements_per_iteration, benchmark::Counter::kIsRate);
 
-  const size_t bytes_per_iteration = (elements_per_iteration + batch * (rounded_n * rounded_k + rounded_n * sizeof(uint32_t)));
+  const size_t bytes_per_iteration = (elements_per_iteration + batch * (rounded_n * rounded_k / 2 + rounded_n * sizeof(uint32_t)));
   state.counters["bytes"] =
     benchmark::Counter(uint64_t(state.iterations()) * bytes_per_iteration, benchmark::Counter::kIsRate);
 }
