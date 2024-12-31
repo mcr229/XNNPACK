@@ -98,7 +98,10 @@ extern "C" {
 /// Retain reduced dimensions with length 1.
 #define XNN_FLAG_KEEP_DIMS 0x00000040
 
-// Next unused flag value: 0x00000100.
+/// Scales in blockwise quantization are Blocks x Output Channels
+#define XNN_FLAG_TRANSPOSE_SCALES 0x00000100
+
+// Next unused flag value: 0x00000200.
 
 /// The number of entries in an array of xnn_quantization_params that XNNPACK may read beyond array bounds.
 /// The caller must allocate at least this many extra xnn_quantization_params before passing the array to XNNPACK.
@@ -442,6 +445,9 @@ enum xnn_status xnn_define_channelwise_quantized_tensor_value_v2(
 ///                     number of input channel element per output channel.
 ///                     For Fully connected operators with 2d filters of size [output_channels, input_channels],
 ///                     expecting number of scale values to be = output_channels * (input_channels / block_size).
+/// @param flags - binary features of the Value. Supported values are any combination of XNN_VALUE_FLAG_EXTERNAL_INPUT
+///                and XNN_VALUE_FLAG_EXTERNAL_OUTPUT. Other supported flags are XNN_FLAG_TRANSPOSE_SCALES for scales which
+///                are transposed to Blocks x Output Channels. Transpose Scales provide faster packing.
 enum xnn_status xnn_define_blockwise_quantized_tensor_value(
   xnn_subgraph_t subgraph,
   enum xnn_datatype datatype,

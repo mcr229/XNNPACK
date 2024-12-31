@@ -115,6 +115,23 @@ void xnn_multithread_qb4_weights_and_biases(
   const size_t extra_bytes_n = sizeof(uint32_t);
   const size_t num_blocks = input_channels / block_size;
   const size_t num_bytes_ksum = 4;
+  bool free_block_scales = false;
+  const uint16_t* block_scales = (const uint16_t*)extra_data1;
+  if ((flags & XNN_FLAG_TRANSPOSE_SCALES) == 0) {
+    const size_t blocks_per_row = input_channels / block_size;
+    const size_t num_blocks = blocks_per_row * output_channels;
+    // if block scales are not transposed, then transpose them
+    // as our packing functions prefers them to be in blocks x output_channels
+    uint16_t* transposed_block_scales = (uint16_t*)malloc(num_blocks * sizeof(uint16_t));
+    free_block_scales = true;
+    for(size_t ni = 0; ni < output_channels; ni++) {
+      for (size_t bi = 0; bi < blocks_per_row; bi++) {
+        transposed_block_scales[bi * output_channels + ni] = ((uint16_t*)extra_data1)[ni * blocks_per_row + bi];
+      }
+    }
+    block_scales = transposed_block_scales;
+  }
+
 
   struct packw_gemm_goi_bl_context context= (struct packw_gemm_goi_bl_context) {
     .kc = input_channels,
@@ -128,7 +145,7 @@ void xnn_multithread_qb4_weights_and_biases(
     .b_stride = sizeof(int32_t),
     .packed_weights = packed_weights_ptr,
     .w_stride = k_stride + extra_bytes_n + num_blocks * extra_bytes_bl + num_bytes_ksum,
-    .scales = extra_data1,
+    .scales = block_scales,
     .s_stride = sizeof(xnn_bfloat16) * num_blocks,
     .extra_bytes_bl = nr * extra_bytes_bl,
     .extra_bytes_n = nr * extra_bytes_n,
@@ -145,6 +162,10 @@ void xnn_multithread_qb4_weights_and_biases(
     nr, 
     pthreadpool_flags
   );
+
+  if (free_block_scales) {
+    free((void*) block_scales);
+  }
 }
 
 void xnn_pack_qb4_x16c8_weights_and_biases(

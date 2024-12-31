@@ -4252,7 +4252,7 @@ TEST_F(FullyConnectedTestQP8F32QB4W, matches_operator_api)
     GTEST_SKIP();
   }
   size_t block_size = 32;
-  input_channels = round_up_po2(input_channels, block_size);
+  input_channels = round_up_po2(input_channels, 2 * block_size);
 
   input_dims[input_dims.size() - 1] = input_channels;
   kernel_dims[kernel_dims.size() - 1] = input_channels;

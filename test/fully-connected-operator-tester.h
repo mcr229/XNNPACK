@@ -219,6 +219,15 @@ class FullyConnectedOperatorTester {
     return this->multithreaded_;
   }
 
+  FullyConnectedOperatorTester& transpose_scales(bool transpose_scales) {
+    this->transpose_scales_ = transpose_scales;
+    return *this;
+  }
+
+  size_t transpose_scales() const {
+    return this->transpose_scales_;
+  }
+
   size_t num_threads() const {
     // Do not spin up excessive number of threads for tests.
     return multithreaded() ? 5 : 1;
@@ -442,6 +451,8 @@ class FullyConnectedOperatorTester {
     std::uniform_real_distribution<float> f32dist(-1.f, 1.f);
     std::uniform_real_distribution<float> f32idist(0.5f, 2.0f);
     std::uniform_int_distribution<int32_t> w8dist(std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
+    size_t flags = transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0;
+    flags |= transpose_scales() ? XNN_FLAG_TRANSPOSE_SCALES : 0;
 
     const size_t k2 =  round_up_po2(input_channels(), 2);  // tester assumes byte aligned rows
 
@@ -498,6 +509,9 @@ class FullyConnectedOperatorTester {
               c_ref_acc += int32_t(input[mi * input_stride() + k_index]) * static_cast<float>(kernel_value);
             }
             size_t scale_index = ni * num_blocks + bi;
+            // if (transpose_scales()) {
+            //   scale_index = bi * output_channels() + ni;
+            // }
             float scale = kernel_scale2d[scale_index];
             output_ref[mi * output_channels() + ni] += c_ref_acc * scale;
             kfsum += scale * ksum;
@@ -551,7 +565,7 @@ class FullyConnectedOperatorTester {
           reinterpret_cast<const uint16_t*>(kernel_scale2d.data()),
           kernel.data(), has_bias() ? bias.data() : nullptr,
           output_min, output_max,
-          transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0,
+          flags,
           nullptr, auto_weights_cache.get(),
           &fully_connected_op,
           auto_threadpool.get());
@@ -600,7 +614,7 @@ class FullyConnectedOperatorTester {
             reinterpret_cast<const uint16_t*>(kernel_scale2d.data()),
             kernel.data(), has_bias() ? bias.data() : nullptr,
             output_min, output_max,
-            transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0,
+            flags,
             nullptr, auto_weights_cache.get(),
             &fully_connected_op2,
             auto_threadpool.get()));
@@ -836,6 +850,8 @@ class FullyConnectedOperatorTester {
     std::uniform_real_distribution<float> f32dist(-1.f, 1.f);
     std::uniform_real_distribution<float> f32idist(0.5f, 2.0f);
     std::uniform_int_distribution<int32_t> w8dist(std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
+    size_t flags = transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0;
+    flags |= transpose_scales() ? XNN_FLAG_TRANSPOSE_SCALES : 0;
 
     const size_t k2 =  round_up_po2(input_channels(), 2);  // tester assumes byte aligned rows
 
@@ -893,6 +909,9 @@ class FullyConnectedOperatorTester {
               c_ref_acc += int32_t(input[mi * input_stride() + k_index]) * static_cast<float>(kernel_value);
             }
             size_t scale_index = ni * num_blocks + bi;
+            if (transpose_scales()) {
+              scale_index = bi * output_channels() + ni;
+            }
             float scale = kernel_scale2d[scale_index];
             output_ref[mi * output_channels() + ni] += c_ref_acc * scale;
             kfsum += scale * ksum;
@@ -943,7 +962,7 @@ class FullyConnectedOperatorTester {
           reinterpret_cast<const uint16_t*>(kernel_scale2d.data()),
           kernel.data(), has_bias() ? bias.data() : nullptr,
           output_min, output_max,
-          transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0,
+          flags,
           nullptr, auto_weights_cache.get(),
           &fully_connected_op,
           auto_threadpool.get());
@@ -992,7 +1011,7 @@ class FullyConnectedOperatorTester {
             reinterpret_cast<const uint16_t*>(kernel_scale2d.data()),
             kernel.data(), has_bias() ? bias.data() : nullptr,
             output_min, output_max,
-            transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0,
+            flags,
             nullptr, auto_weights_cache.get(),
             &fully_connected_op2,
             auto_threadpool.get()));
@@ -1272,6 +1291,8 @@ class FullyConnectedOperatorTester {
     std::uniform_real_distribution<float> f32idist(0.5f, 2.0f);
     std::uniform_int_distribution<int32_t> w8dist(
         std::numeric_limits<int8_t>::min(), std::numeric_limits<int8_t>::max());
+    size_t flags = transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0;
+    flags |= transpose_scales() ? XNN_FLAG_TRANSPOSE_SCALES : 0;
 
     const size_t k2 =
         round_up_po2(input_channels(), 2);  // tester assumes byte aligned rows
@@ -1326,6 +1347,9 @@ class FullyConnectedOperatorTester {
                                                   k2, mr_packed, kr, sr)) * int32_t(kernel_value);
             }
             size_t scale_index = ni * num_blocks + bi;
+            if (transpose_scales()) {
+              scale_index = bi * output_channels() + ni;
+            }
             float scale = math_cvt_fp32_bf16(kernel_scale2d[scale_index]);
             output_ref[mi * output_channels() + ni] += c_ref_acc * scale;
             kfsum += scale * ksum;
@@ -1387,7 +1411,7 @@ class FullyConnectedOperatorTester {
           kernel.data(),
           has_bias() ? bias.data() : nullptr,
           output_min, output_max,
-          transpose_weights() ? XNN_FLAG_TRANSPOSE_WEIGHTS : 0,
+          flags,
           nullptr, auto_weights_cache.get(), &fully_connected_op);
       if (status == xnn_status_unsupported_hardware) {
         GTEST_SKIP();
@@ -3266,6 +3290,7 @@ class FullyConnectedOperatorTester {
   size_t batch_size_{1};
   size_t block_size_{1};
   bool multithreaded_{false};
+  bool transpose_scales_{false};
   uint8_t input_zero_point_{127};
   uint8_t output_zero_point_{127};
   uint8_t kernel_zero_point_{127};  // set qc4w kernel zero point to invalid

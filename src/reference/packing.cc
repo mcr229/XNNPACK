@@ -6,6 +6,7 @@
 // This source code is licensed under the BSD-style license found in the
 // LICENSE file in the root directory of this source tree.
 
+#include <iostream>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -1514,6 +1515,24 @@ void xnn_pack_qb4_weights_and_biases(
   const uint32_t sr = UINT32_C(1) << gemm_config->log2_sr;
   const size_t planes = gemm_config->planes;
 
+  const uint16_t* block_scales = (const uint16_t*)extra_data1;
+  const size_t blocks_per_row = input_channels / block_size;
+  const size_t num_blocks = blocks_per_row * output_channels;
+  bool free_block_scales = false;
+  if ((flags & XNN_FLAG_TRANSPOSE_SCALES)) {
+    std::cout << "transposing block scales\n";
+    // if block scales are not transposed, then transpose them
+    // as our packing functions prefers them to be in blocks x output_channels
+    uint16_t* transposed_block_scales = (uint16_t*)malloc(num_blocks * sizeof(uint16_t));
+    free_block_scales = true;
+    for(size_t ni = 0; ni < output_channels; ni++) {
+      for (size_t bi = 0; bi < blocks_per_row; bi++) {
+        transposed_block_scales[bi * output_channels + ni] = ((uint16_t*)extra_data1)[ni * blocks_per_row + bi];
+      }
+    }
+    block_scales = transposed_block_scales;
+  }
+
   const size_t extra_bytes_bl = sizeof(uint16_t);
   const size_t extra_bytes_n = sizeof(uint32_t);
   if (flags & XNN_FLAG_TRANSPOSE_WEIGHTS) {
@@ -1528,7 +1547,7 @@ void xnn_pack_qb4_weights_and_biases(
       /*bl=*/block_size,
       /*k=*/(const uint8_t*)weights, 
       /*bias=*/NULL, 
-      /*scale=*/(const xnn_bfloat16*)extra_data1,
+      /*scale=*/(const xnn_bfloat16*)block_scales,
       /*packed_weights=*/packed_weights_ptr,
       /*extra_bytes_bl=*/nr * extra_bytes_bl,
       /*extra_bytes_n=*/nr * extra_bytes_n,
@@ -1544,7 +1563,7 @@ void xnn_pack_qb4_weights_and_biases(
       /*bl=*/block_size,
       /*k=*/(const uint8_t*)weights, 
       /*bias=*/NULL,
-      /*scale=*/(const xnn_bfloat16*)extra_data1,
+      /*scale=*/(const xnn_bfloat16*)block_scales,
       /*packed_weights=*/packed_weights_ptr,
       /*extra_bytes_bl=*/nr * extra_bytes_bl,
       /*extra_bytes_n=*/nr * extra_bytes_n,
@@ -1552,7 +1571,6 @@ void xnn_pack_qb4_weights_and_biases(
   }
 
   // fill in kernel scales
-  const size_t num_blocks = input_channels / block_size;
   const size_t weights_stride = xnn_packed_stride_qb4_weights_and_biases(gemm_config, input_channels, block_size, k_stride, extra_bytes_n);
   void* weights_start = (void*) ((uintptr_t) packed_weights_ptr +
     nr * (sizeof(float) + (block_size * sizeof(int8_t) / 2)));
@@ -1562,7 +1580,7 @@ void xnn_pack_qb4_weights_and_biases(
       output_channels, nr, nr,
       nr * weights_stride,
       nr * weights_stride,
-      /*num_blocks=*/num_blocks,
+      /*num_blocks=*/blocks_per_row,
       /*block_stride=*/gemm_config->nr * block_stride,
       0,
       (const xnn_bfloat16*)extra_data1, weights_start);
@@ -1574,6 +1592,9 @@ void xnn_pack_qb4_weights_and_biases(
           output_channels, gemm_config->nr, gemm_config->nr,
           gemm_config->nr * weights_stride, gemm_config->nr * weights_stride, 0,
           (const float*)accumulator_init, weights_start);
+  }
+  if (free_block_scales) {
+    free((void*)block_scales);
   }
 }
 
@@ -1762,6 +1783,24 @@ void xnn_pack_kai_qb4_weights_and_biases(
   const uint32_t sr = UINT32_C(1) << gemm_config->log2_sr;
   const struct xnn_qs8_qc4w_packing_params* xnn_params =
       reinterpret_cast<const struct xnn_qs8_qc4w_packing_params*>(params);
+  
+  const uint16_t* block_scales = (const uint16_t*)extra_data1;
+  const size_t blocks_per_row = input_channels / block_size;
+  const size_t num_blocks = blocks_per_row * output_channels;
+  bool free_block_scales = false;
+  if ((flags & XNN_FLAG_TRANSPOSE_SCALES)) {
+    // kleidi packing prefers scales to be output_channels x blocks
+    // so if the scales are transposed, then trasponse back to output_channels x blocks
+    uint16_t* transposed_block_scales = (uint16_t*)malloc(num_blocks * sizeof(uint16_t));
+    free_block_scales = true;
+    for (size_t bi = 0; bi < blocks_per_row; bi++) {
+      for(size_t ni = 0; ni < output_channels; ni++) {
+        transposed_block_scales[ni * blocks_per_row + bi] = ((uint16_t*)extra_data1)[bi * output_channels + ni];
+      }
+    }
+    block_scales = transposed_block_scales;
+  }
+
 
   if (flags & XNN_FLAG_TRANSPOSE_WEIGHTS) {
     struct kai_rhs_pack_kxn_qsi4c32p_qsu4c32s1s0_params kai_params;
@@ -1776,7 +1815,7 @@ void xnn_pack_kai_qb4_weights_and_biases(
       /*rhs=*/reinterpret_cast<const uint8_t*>(weights),
       /*rhs_stride=*/rhs_stride,
       /*bias=*/reinterpret_cast<const float*>(extra_data0),
-      /*scale=*/reinterpret_cast<const uint16_t*>(extra_data1),
+      /*scale=*/block_scales,
       /*scale_stride=*/blocks_per_row * sizeof(uint16_t),
       /*rhs_packed*/packed_weights_ptr,
       /*extra_bytes=*/0,
@@ -1795,7 +1834,7 @@ void xnn_pack_kai_qb4_weights_and_biases(
       /*rhs=*/reinterpret_cast<const uint8_t*>(weights),
       /*rhs_stride=*/rhs_stride,
       /*bias=*/reinterpret_cast<const float*>(extra_data0),
-      /*scale=*/reinterpret_cast<const uint16_t*>(extra_data1),
+      /*scale=*/block_scales,
       /*scale_stride=*/blocks_per_row * sizeof(uint16_t),
       /*rhs_packed*/packed_weights_ptr,
       /*extra_bytes=*/0,
@@ -1813,6 +1852,9 @@ void xnn_pack_kai_qb4_weights_and_biases(
           output_channels, nr, nr,
           nr * weights_stride, nr * weights_stride, 0,
           (const float*)accumulator_init, weights_start);
+  }
+  if (free_block_scales) {
+    free((void*)block_scales);
   }
 }
 #endif  // XNN_ENABLE_KLEIDIAI

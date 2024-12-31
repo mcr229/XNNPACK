@@ -214,11 +214,11 @@ static enum xnn_status create_fully_connected_operator(
 
   size_t output_channels, input_channels;
   if (node->flags & XNN_FLAG_TRANSPOSE_WEIGHTS) {
-    input_channels = values[node->inputs[1]].shape.dim[0];
-    output_channels = values[node->inputs[1]].shape.dim[1];
+    input_channels = values[filter_id].shape.dim[0];
+    output_channels = values[filter_id].shape.dim[1];
   } else {
-    output_channels = values[node->inputs[1]].shape.dim[0];
-    input_channels = values[node->inputs[1]].shape.dim[1];
+    output_channels = values[filter_id].shape.dim[0];
+    input_channels = values[filter_id].shape.dim[1];
   }
 
   const void* kernel_data = values[filter_id].fp32_data != NULL
@@ -1281,6 +1281,9 @@ enum xnn_status xnn_define_fully_connected(xnn_subgraph_t subgraph,
   if (is_blockwise_quantized) {
     // TODO: Unsupported features
     assert((flags & XNN_FLAG_TRANSPOSE_WEIGHTS) == 0);
+    // Modify flag for transpose scales
+    const size_t transpose_scale_flag = kernel_value->flags & XNN_FLAG_TRANSPOSE_SCALES;
+    flags |= transpose_scale_flag;
 
     const size_t input_channels_dim =
         ((flags & XNN_FLAG_TRANSPOSE_WEIGHTS) != 0) ? 0 : 1;

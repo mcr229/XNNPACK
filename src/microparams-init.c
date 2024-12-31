@@ -520,7 +520,7 @@ void xnn_init_blockwise_scale_bf16_params(
     for (; tile_start < tiled_channels; tile_start += channels_tile) {
       const size_t tile_size = channels_tile;
       for (size_t tile_offset = 0; tile_offset < tile_size; tile_offset++) {
-        size_t scale_index = (tile_start + tile_offset) * num_blocks + block_start;
+        size_t scale_index = (tile_start + tile_offset) + block_start * channels;
         // 1/16 because the weight are << 4 in the innermost loop to save a shift
         float scale_16 = math_cvt_bf16_fp32(xnn_bfloat16_to_float(scale[scale_index]) / 16.0f);
         unaligned_indexed_store_u16(packed_w, tile_offset, scale_16);
@@ -533,7 +533,7 @@ void xnn_init_blockwise_scale_bf16_params(
     for (; tile_start < channels; tile_start += channels_subtile) {
       const size_t tile_size = min(channels - tile_start, channels_subtile);
       for (size_t tile_offset = 0; tile_offset < tile_size; tile_offset++) {
-        size_t scale_index = (tile_start + tile_offset) * num_blocks + block_start;
+        size_t scale_index = (tile_start + tile_offset) + block_start * channels;
         // 1/16 because the weight are << 4 in the innermost loop to save a shift
         float scale_16 = math_cvt_bf16_fp32(xnn_bfloat16_to_float(scale[scale_index]) / 16.0f);
         unaligned_indexed_store_u16(packed_w, tile_offset, scale_16);
