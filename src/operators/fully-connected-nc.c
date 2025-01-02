@@ -575,19 +575,6 @@ enum xnn_status xnn_create_fully_connected_nc_qd8_f16_qb4w(
 
   // Assuming kernel_scale.size() is output_channels * num_blocks.
   size_t num_blocks = input_channels / block_size;
-  for (size_t output_channel = 0; output_channel < output_channels; output_channel++) {
-    for(size_t block_index=0; block_index < num_blocks; block_index++) {
-      size_t scale_index = output_channel * num_blocks + block_index;
-      float fp32_scale = math_cvt_fp32_bf16(kernel_scale[scale_index]);
-      if (fp32_scale <= 0.0f || !isnormal(fp32_scale)) {
-        xnn_log_error(
-          "failed to create %s operator with %.7g kernel scale in output channel #%zu, block #%zu: scale must be finite and positive",
-          xnn_operator_type_to_string(xnn_operator_type_fully_connected_nc_qd8_f16_qb4w),
-          fp32_scale, output_channel, block_index);
-        return xnn_status_invalid_parameter;
-      }
-    }
-  }
 
   if (kernel_zero_point != 8) {
     xnn_log_error(
@@ -955,19 +942,6 @@ enum xnn_status xnn_create_fully_connected_nc_qp8_f32_qb4w(
   }
   // Assuming kernel_scale.size() is output_channels * num_blocks.
   size_t num_blocks = input_channels / block_size;
-  for (size_t output_channel = 0; output_channel < output_channels; output_channel++) {
-    for(size_t block_index=0; block_index < num_blocks; block_index++) {
-      size_t scale_index = output_channel * num_blocks + block_index;
-      float fp32_scale = math_cvt_fp32_bf16(kernel_scale[scale_index]);
-      if (fp32_scale <= 0.0f || !isnormal(fp32_scale)) {
-        xnn_log_error(
-          "failed to create %s operator with %.7g kernel scale in output channel #%zu, block #%zu: scale must be finite and positive",
-          xnn_operator_type_to_string(xnn_operator_type_fully_connected_nc_qp8_f32_qb4w),
-          fp32_scale, output_channel, block_index);
-        return xnn_status_invalid_parameter;
-      }
-    }
-  }
 
   struct xnn_f32_qb4w_minmax_params params;
   if XNN_LIKELY(gemm_config->init.f32_qb4w != NULL) {
@@ -1080,19 +1054,6 @@ enum xnn_status create_fully_connected_nc_qx8_f32_qb4w(
   }
   // Assuming kernel_scale.size() is output_channels * num_blocks.
   size_t num_blocks = input_channels / block_size;
-  for (size_t output_channel = 0; output_channel < output_channels; output_channel++) {
-    for(size_t block_index=0; block_index < num_blocks; block_index++) {
-      size_t scale_index = output_channel * num_blocks + block_index;
-      float fp32_scale = math_cvt_fp32_bf16(kernel_scale[scale_index]);
-      if (fp32_scale <= 0.0f || !isnormal(fp32_scale)) {
-        xnn_log_error(
-          "failed to create %s operator with %.7g kernel scale in output channel #%zu, block #%zu: scale must be finite and positive",
-          xnn_operator_type_to_string(xnn_operator_type_fully_connected_nc_qd8_f32_qb4w),
-          fp32_scale, output_channel, block_index);
-        return xnn_status_invalid_parameter;
-      }
-    }
-  }
 
   struct xnn_f32_qb4w_minmax_params params;
   if XNN_LIKELY(gemm_config->init.f32_qb4w != NULL) {
