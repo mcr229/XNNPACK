@@ -558,7 +558,7 @@ void xnn_pack_qs8_qb4w_gemm_goi_w(
   void* packed_weights,
   size_t extra_bytes_bl, // extra bytes per block
   size_t extra_bytes_n,  // extra bytes per n
-  const struct xnn_qs8_qc4w_packing_params* params)
+  const struct xnn_qs8_qb4w_packing_params* params)
 {
   assert(g != 0);
   assert(nc != 0);
@@ -651,7 +651,7 @@ void xnn_pack_qs8_qb4w_gemm_gio_w(
   void* packed_weights,
   size_t extra_bytes_bl,  // extra bytes per block
   size_t extra_bytes_n,   // extra bytes per n
-  const struct xnn_qs8_qc4w_packing_params* params)
+  const struct xnn_qs8_qb4w_packing_params* params)
 {
   assert(g != 0);
   assert(nc != 0);
@@ -1551,7 +1551,7 @@ void xnn_pack_qb4_weights_and_biases(
       /*packed_weights=*/packed_weights_ptr,
       /*extra_bytes_bl=*/nr * extra_bytes_bl,
       /*extra_bytes_n=*/nr * extra_bytes_n,
-      /*params*/(const struct xnn_qs8_qc4w_packing_params *)params);
+      /*params*/(const struct xnn_qs8_qb4w_packing_params *)params);
   } else {
     xnn_pack_qs8_qb4w_gemm_goi_w(
       /*g=*/groups, 
@@ -1567,7 +1567,7 @@ void xnn_pack_qb4_weights_and_biases(
       /*packed_weights=*/packed_weights_ptr,
       /*extra_bytes_bl=*/nr * extra_bytes_bl,
       /*extra_bytes_n=*/nr * extra_bytes_n,
-      /*params*/(const struct xnn_qs8_qc4w_packing_params *)params);
+      /*params*/(const struct xnn_qs8_qb4w_packing_params *)params);
   }
 
   // fill in kernel scales

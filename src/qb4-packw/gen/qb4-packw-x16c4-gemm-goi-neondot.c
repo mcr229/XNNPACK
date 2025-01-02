@@ -76,7 +76,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
 
   uint8_t* out = (uint8_t*) packed_weights;
   const int32_t* b = (const int32_t*) bias;
-  const float32x4_t vzeropoint = vmovq_n_f32((float) (((const struct xnn_qs8_qc4w_packing_params*) params)->input_zero_point + 0));
+  const float32x4_t vzeropoint = vmovq_n_f32((float) (((const struct xnn_qs8_qb4w_packing_params*) params)->input_zero_point + 0));
+  const size_t scale_stride = (((const struct xnn_qs8_qb4w_packing_params*) params)->scale_stride);
   const float32x4_t vrecip_sixteen = vmovq_n_f32(1.0f/ 16.0f);
 
   do {
@@ -214,7 +215,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
             float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 4), 16));
             float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 8), 16));
             float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 12), 16));
-            s0 += nc;
+            s0 += scale_stride;
 
             float32x4_t f_ksum0123 = vcvtq_f32_s32(ksum0123);
             f_ksum0123 = vmulq_f32(f_ksum0123, vzeropoint);
@@ -459,7 +460,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot(
             float32x4_t f_scales4567 = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 4), 16));
             float32x4_t f_scales89AB = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 8), 16));
             float32x4_t f_scalesCDEF = vreinterpretq_f32_u32(vshll_n_u16(vld1_u16(s0 + 12), 16));
-            s0 += n;
+            s0 += scale_stride;
 
             float32x4_t f_ksum0123 = vcvtq_f32_s32(ksum0123);
             f_ksum0123 = vmulq_f32(f_ksum0123, vzeropoint);

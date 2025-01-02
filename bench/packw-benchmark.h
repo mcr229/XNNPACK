@@ -172,7 +172,7 @@ static void qb4_packw(benchmark::State& state,
   xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(num_blocks * batch * rounded_n);
   xnnpack::fill_uniform_random_bits(bf16_scales.data(), bf16_scales.size(), rng);
 
-  const xnn_qs8_qc4w_packing_params packing_params = { 1, 8 };
+  const xnn_qs8_qb4w_packing_params packing_params = { 1, 8, dim_n };
 
   size_t buffer_index = 0;
   for (auto _ : state) {
@@ -963,7 +963,7 @@ static void qb4_packw_goi__reference(
      packed_weights,
      extra_bytes_bl,
      extra_bytes_n, 
-     reinterpret_cast<const struct xnn_qs8_qc4w_packing_params*>(params));
+     reinterpret_cast<const struct xnn_qs8_qb4w_packing_params*>(params));
 }
 
 static void qb4_packw_x16c4_goi__reference(benchmark::State& state, const char* net) {

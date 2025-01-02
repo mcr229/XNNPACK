@@ -616,7 +616,7 @@ enum xnn_status xnn_create_fully_connected_nc_qd8_f16_qb4w(
   }
 
   // We don't know input zero point until runtime, row sum is multiplied by it during packing, so set it to 1.
-  const struct xnn_qs8_qc4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point };
+  const struct xnn_qs8_qb4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point, output_channels};
 
   return create_fully_connected_nc(
     input_channels, output_channels,
@@ -975,7 +975,7 @@ enum xnn_status xnn_create_fully_connected_nc_qp8_f32_qb4w(
   }
 
   // We don't know input zero point until runtime, row sum is multiplied by it during packing, so set it to 1.
-  const struct xnn_qs8_qc4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point };
+  const struct xnn_qs8_qb4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point, num_blocks * sizeof(uint16_t)};
 
   return create_fully_connected_nc(
     input_channels, output_channels,
@@ -1100,7 +1100,7 @@ enum xnn_status create_fully_connected_nc_qx8_f32_qb4w(
   }
 
   // We don't know input zero point until runtime, row sum is multiplied by it during packing, so set it to 1.
-  const struct xnn_qs8_qc4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point };
+  const struct xnn_qs8_qb4w_packing_params packing_params = { /*input_zero_point=*/1, kernel_zero_point, output_channels };
 
   return create_fully_connected_nc(
     input_channels, output_channels,

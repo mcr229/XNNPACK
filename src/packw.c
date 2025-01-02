@@ -1,4 +1,3 @@
-
 // Copyright (c) Facebook, Inc. and its affiliates.
 // All rights reserved.
 //
@@ -145,8 +144,8 @@ void xnn_multithread_qb4_weights_and_biases(
     .b_stride = sizeof(int32_t),
     .packed_weights = packed_weights_ptr,
     .w_stride = k_stride + extra_bytes_n + num_blocks * extra_bytes_bl + num_bytes_ksum,
-    .scales = block_scales,
-    .s_stride = sizeof(xnn_bfloat16) * num_blocks,
+    .scales = extra_data1,
+    .s_stride = sizeof(xnn_bfloat16),
     .extra_bytes_bl = nr * extra_bytes_bl,
     .extra_bytes_n = nr * extra_bytes_n,
     .params = params,
@@ -212,12 +211,25 @@ void xnn_pack_qb4_x16c4_weights_and_biases(
       extra_data0, extra_data0_element_size, init_extra_data1_fn, extra_data1,
       extra_data1_element_size, packed_weights_ptr, params, threadpool);
   } else {
+    size_t num_blocks_per_row = input_channels / block_size;
+    const size_t num_blocks = num_blocks_per_row * output_channels;
+    uint16_t* bf16_scales = (uint16_t*)malloc(num_blocks * sizeof(uint16_t));
+    for(size_t ni = 0; ni < output_channels; ni++){
+      for(size_t kbi = 0; kbi < num_blocks_per_row; kbi++){
+        size_t index = ni * num_blocks_per_row + kbi;
+        size_t t_index = kbi * output_channels + ni;
+        bf16_scales[t_index] = ((uint16_t*)extra_data1)[index];
+      }
+    }
+
     xnn_multithread_qb4_weights_and_biases(
       flags, gemm_config, input_channels, output_channels, groups,
       block_size, k_stride, accumulator_init, weights, init_extra_data0_fn,
-      extra_data0, extra_data0_element_size, init_extra_data1_fn, extra_data1,
+      extra_data0, extra_data0_element_size, init_extra_data1_fn, bf16_scales,
       extra_data1_element_size, packed_weights_ptr, 
       (xnn_packw_gemm_goi_bl_ukernel_fn) xnn_qb4_packw_gemm_goi_ukernel_x16c4__neondot,
       params, threadpool);
+    
+    free((void*)bf16_scales); 
   }
 }

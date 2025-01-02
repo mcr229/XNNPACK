@@ -46,7 +46,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__scalar(
 
   int8_t* out = (int8_t*) packed_weights;
   const int32_t* b = (const int32_t*) bias;
-  const uint32_t izp = (uint32_t) (((const struct xnn_qs8_qc4w_packing_params*) params)->input_zero_point + 0);
+  const uint32_t izp = (uint32_t) (((const struct xnn_qs8_qb4w_packing_params*) params)->input_zero_point + 0);
+  const size_t scale_stride = (uint32_t) (((const struct xnn_qs8_qb4w_packing_params*) params)->scale_stride);
 
   do {
     // NC main loop multiple of 16
@@ -533,7 +534,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__scalar(
             float scale13 = math_cvt_fp32_bf16(s0[13]);
             float scale14 = math_cvt_fp32_bf16(s0[14]);
             float scale15 = math_cvt_fp32_bf16(s0[15]);
-            s0 += nc;
+            s0 += scale_stride;
 
 
             packed_k_scaled_sum[0] -= (float)ksum0 * izp * scale0;
@@ -1109,7 +1110,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x16c4__scalar(
             float scale13 = math_cvt_fp32_bf16(s0[13]);
             float scale14 = math_cvt_fp32_bf16(s0[14]);
             float scale15 = math_cvt_fp32_bf16(s0[15]);
-            s0 += nc;
+            s0 += scale_stride;
 
 
             packed_k_scaled_sum[0] -= (float)ksum0 * izp * scale0;

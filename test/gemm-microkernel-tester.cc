@@ -1348,7 +1348,7 @@ void GemmMicrokernelTester::Test(
     std::fill(packed_w.begin(), packed_w.end(), 0);
     // Row sums are multiplied by input zero point, since we don't know it
     // until runtime, set it to 1.
-    const xnn_qs8_qc4w_packing_params packing_params = { /*input_zero_point=*/1, b_zero_point()};
+    const xnn_qs8_qb4w_packing_params packing_params = { /*input_zero_point=*/1, b_zero_point(), n()};
 
     pack(/*g=*/1, n(), k2, nr(), kr(), sr(), bl(),
       b.data(), /*bias=*/nullptr, /*scale=*/kernel_scale2d.data(),
@@ -1656,7 +1656,7 @@ void GemmMicrokernelTester::Test(
     std::fill(packed_w.begin(), packed_w.end(), 0);
     // Row sums are multiplied by input zero point, since we don't know it
     // until runtime, set it to 1.
-    const xnn_qs8_qc4w_packing_params packing_params = { /*input_zero_point=*/1, b_zero_point()};
+    const xnn_qs8_qb4w_packing_params packing_params = { /*input_zero_point=*/1, b_zero_point(), n()};
     pack(/*g=*/1, n(), k2, nr(), kr(), sr(), bl(),
       b.data(), /*bias=*/nullptr, /*scale=*/kernel_scale2d.data(),
       packed_w.data(), sizeof(xnn_float16) * nr(), sizeof(float) * nr(), &packing_params);

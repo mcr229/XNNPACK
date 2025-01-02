@@ -578,6 +578,12 @@ struct xnn_qs8_qc4w_packing_params {
   uint8_t kernel_zero_point;
 };
 
+struct xnn_qs8_qb4w_packing_params {
+  int8_t input_zero_point;
+  uint8_t kernel_zero_point;
+  size_t scale_stride;
+};
+
 struct xnn_x32_packb_params {
   char _;  // Dummy member variable to comply with the C standard
 };

@@ -44,7 +44,8 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
 
   int8_t* out = (int8_t*) packed_weights;
   const int32_t* b = (const int32_t*) bias;
-  const uint32_t izp = (uint32_t) (((const struct xnn_qs8_qc4w_packing_params*) params)->input_zero_point + 0);
+  const uint32_t izp = (uint32_t) (((const struct xnn_qs8_qb4w_packing_params*) params)->input_zero_point + 0);
+  const size_t scale_stride = (uint32_t) (((const struct xnn_qs8_qb4w_packing_params*) params)->scale_stride);
 
   do {
     // NC main loop multiple of ${NR}
@@ -89,7 +90,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
             }
             $for N in range(NR):
                 float scale${N} = math_cvt_fp32_bf16(s0[${N}]);
-            s0 += nc;
+            s0 += scale_stride;
 
 
             $for N in range(NR):
@@ -161,7 +162,7 @@ void xnn_qb4_packw_gemm_goi_ukernel_x${NR}c${KR}__scalar(
             }
             $for N in range(NR):
                 float scale${N} = math_cvt_fp32_bf16(s0[${N}]);
-            s0 += nc;
+            s0 += scale_stride;
 
 
             $for N in range(NR-1):
