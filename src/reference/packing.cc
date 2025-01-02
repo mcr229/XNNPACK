@@ -617,7 +617,7 @@ void xnn_pack_qs8_qb4w_gemm_goi_w(
           }
 
           size_t block_index = kr_block_start / bl;
-          size_t scale_index = (nr_block_start + nr_block_offset) * num_blocks + block_index;
+          size_t scale_index = (nr_block_start + nr_block_offset) + block_index * nc;
           unaligned_indexed_store_f32(packed_b, nr_block_offset,
             unaligned_indexed_load_f32(packed_b, nr_block_offset) -
               (float) ksum * izp * xnn_bfloat16_to_float(scale[scale_index]));
@@ -710,7 +710,7 @@ void xnn_pack_qs8_qb4w_gemm_gio_w(
           }
 
           size_t block_index = kr_block_start / bl;
-          size_t scale_index = (nr_block_start + nr_block_offset) * num_blocks + block_index;
+          size_t scale_index = (nr_block_start + nr_block_offset) + block_index * nc;
           unaligned_indexed_store_f32(packed_b, nr_block_offset,
             unaligned_indexed_load_f32(packed_b, nr_block_offset) -
               (float) ksum * izp * xnn_bfloat16_to_float(scale[scale_index]));
@@ -1519,8 +1519,7 @@ void xnn_pack_qb4_weights_and_biases(
   const size_t blocks_per_row = input_channels / block_size;
   const size_t num_blocks = blocks_per_row * output_channels;
   bool free_block_scales = false;
-  if ((flags & XNN_FLAG_TRANSPOSE_SCALES)) {
-    std::cout << "transposing block scales\n";
+  if ((flags & XNN_FLAG_TRANSPOSE_SCALES) == 0) {
     // if block scales are not transposed, then transpose them
     // as our packing functions prefers them to be in blocks x output_channels
     uint16_t* transposed_block_scales = (uint16_t*)malloc(num_blocks * sizeof(uint16_t));
@@ -1583,7 +1582,7 @@ void xnn_pack_qb4_weights_and_biases(
       /*num_blocks=*/blocks_per_row,
       /*block_stride=*/gemm_config->nr * block_stride,
       0,
-      (const xnn_bfloat16*)extra_data1, weights_start);
+      (const xnn_bfloat16*)block_scales, weights_start);
   
   // fill in bias if not null
   if (accumulator_init != nullptr) {

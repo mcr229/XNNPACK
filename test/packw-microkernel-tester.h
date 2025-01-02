@@ -514,9 +514,6 @@ class PackWMicrokernelTester {
     xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> bf16_scales(
       n() * (k() / bl())
     );
-    xnnpack::Buffer<xnn_bfloat16, XNN_ALLOCATION_ALIGNMENT> transposed_bf16_scales(
-      n() * (k() / bl())
-    );
     size_t k_num_blocks = k() / bl();
 
     std::iota(weights.begin(), weights.end(), 0);
@@ -524,14 +521,6 @@ class PackWMicrokernelTester {
     std::fill(packed_w.begin(), packed_w.end(), INT8_C(0));
     std::fill(packed_w_ref.begin(), packed_w_ref.end(), INT8_C(0));
     std::iota(bf16_scales.begin(), bf16_scales.end(), 3.75);
-    // fill in transposed scales since packw ukernels use transposed scales
-    for(size_t ni = 0; ni < n(); ni++){
-      for(size_t kbi = 0; kbi < k_num_blocks; kbi++){
-        size_t index = ni * k_num_blocks + kbi;
-        size_t t_index = kbi * n() + ni;
-        transposed_bf16_scales[t_index] = bf16_scales[index];
-      }
-    }
 
 
     const int32_t* bias_data = nullbias() ? nullptr : bias.data();
@@ -581,7 +570,7 @@ class PackWMicrokernelTester {
 
     // Call optimized micro-kernel.
     packw(/*g=*/1, n(), k(), nr(), kr(), sr(), bl(),
-      weights.data(), bias_data, /*scale=*/transposed_bf16_scales.data(), packed_w.data(), sizeof(uint16_t) * nr(), /*extra_bytes=*/sizeof(float) * nr(), &packing_params);
+      weights.data(), bias_data, /*scale=*/scale_data, packed_w.data(), sizeof(uint16_t) * nr(), /*extra_bytes=*/sizeof(float) * nr(), &packing_params);
     
     const uint8_t* packed_data = (uint8_t*)packed_w.data();
     const uint8_t* packed_ref_data = (uint8_t*)packed_w_ref.data();

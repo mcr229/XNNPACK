@@ -509,9 +509,9 @@ class FullyConnectedOperatorTester {
               c_ref_acc += int32_t(input[mi * input_stride() + k_index]) * static_cast<float>(kernel_value);
             }
             size_t scale_index = ni * num_blocks + bi;
-            // if (transpose_scales()) {
-            //   scale_index = bi * output_channels() + ni;
-            // }
+            if (transpose_scales()) {
+              scale_index = bi * output_channels() + ni;
+            }
             float scale = kernel_scale2d[scale_index];
             output_ref[mi * output_channels() + ni] += c_ref_acc * scale;
             kfsum += scale * ksum;

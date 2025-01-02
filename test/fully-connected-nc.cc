@@ -1381,8 +1381,8 @@ TEST(FULLY_CONNECTED_NC_QD8_F32_QB4W, bl) {
         .has_bias(false)
         .batch_size(1)
         .output_channels(32)
-        .input_channels(32)
-        .block_size(32)
+        .input_channels(ic)
+        .block_size(bs)
         .kernel_zero_point(8)
         .iterations(3)
         .TestQD8F32QB4W();
@@ -1444,8 +1444,8 @@ TEST(FULLY_CONNECTED_NC_QD8_F32_QB4W, bl_t_scales) {
         .has_bias(false)
         .batch_size(1)
         .output_channels(32)
-        .input_channels(32)
-        .block_size(32)
+        .input_channels(ic)
+        .block_size(bs)
         .kernel_zero_point(8)
         .iterations(3)
         .transpose_scales(true)
@@ -2145,19 +2145,19 @@ TEST(DISABLED_FULLY_CONNECTED_NC_QP8_F32_QC4W, weights_cache_unit_batch_transpos
 }
 
 TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, bl) {
-  // for (size_t ic=32; ic<=256; ic*=2){
-  //   for (size_t bs=32; bs<=ic; bs=bs*2) {
+  for (size_t ic=32; ic<=256; ic*=2){
+    for (size_t bs=32; bs<=ic; bs=bs*2) {
       FullyConnectedOperatorTester()
         .has_bias(false)
         .batch_size(1)
         .output_channels(16)
-        .input_channels(32)
-        .block_size(32)
+        .input_channels(ic)
+        .block_size(bs)
         .kernel_zero_point(8)
         .iterations(3)
         .TestQD8F16QB4W();
-  //   }
-  // }
+    }
+  }
 }
 
 TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, multithreaded) {
@@ -2187,6 +2187,56 @@ TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, bl_no_bias) {
         .block_size(bs)
         .kernel_zero_point(8)
         .iterations(1)
+        .TestQD8F16QB4W();
+    } }
+}
+
+TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, bl_transpose_scales) {
+  for (size_t ic=32; ic<=256; ic*=2){
+    for (size_t bs=32; bs<=ic; bs=bs*2) {
+      FullyConnectedOperatorTester()
+        .has_bias(false)
+        .batch_size(1)
+        .output_channels(16)
+        .input_channels(ic)
+        .block_size(bs)
+        .kernel_zero_point(8)
+        .iterations(3)
+        .transpose_scales(true)
+        .TestQD8F16QB4W();
+    }
+  }
+}
+
+TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, multithreaded_transpose_scales) {
+  for (size_t ic=32; ic<=256; ic*=2){
+    for (size_t bs=32; bs<=ic; bs=bs*2) {
+      FullyConnectedOperatorTester()
+        .batch_size(12)
+        .output_channels(18)
+        .input_channels(ic)
+        .block_size(bs)
+        .kernel_zero_point(8)
+        .iterations(3)
+        .multithreaded(true)
+        .transpose_scales(true)
+        .TestQD8F16QB4W();
+    }
+  }
+}
+
+TEST(FULLY_CONNECTED_NC_QD8_F16_QB4W, bl_no_bias_transpose_scales) {
+  for (size_t ic=32; ic<=256; ic*=2){
+    for (size_t bs=32; bs<=ic; bs=bs*2) {
+      FullyConnectedOperatorTester()
+        .has_bias(false)
+        .batch_size(12)
+        .output_channels(18)
+        .input_channels(ic)
+        .block_size(bs)
+        .kernel_zero_point(8)
+        .iterations(1)
+        .transpose_scales(true)
         .TestQD8F16QB4W();
     } }
 }
